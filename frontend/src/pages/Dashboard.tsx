@@ -76,7 +76,7 @@ export const Dashboard = () => {
             <div className="text-4xl mb-2">📦</div>
             <p className="text-gray-600 text-sm mb-1">Stock dispo</p>
             <p className="text-2xl md:text-3xl font-bold text-sage-700">
-              {data.total_stock_kg.toFixed(1)} kg
+              {Number(data.total_stock_kg).toFixed(1)} kg
             </p>
           </Card>
 
@@ -85,7 +85,7 @@ export const Dashboard = () => {
             <div className="text-4xl mb-2">🚚</div>
             <p className="text-gray-600 text-sm mb-1">Total vendu</p>
             <p className="text-2xl md:text-3xl font-bold text-sage-700">
-              {data.total_vendu_kg.toFixed(1)} kg
+              {Number(data.total_vendu_kg).toFixed(1)} kg
             </p>
           </Card>
 
@@ -103,7 +103,7 @@ export const Dashboard = () => {
             <div className="text-4xl mb-2">⚖️</div>
             <p className="text-gray-600 text-sm mb-1">Moy. panier</p>
             <p className="text-2xl md:text-3xl font-bold text-sage-700">
-              {data.moyenne_kg_panier.toFixed(1)} kg
+              {Number(data.moyenne_kg_panier).toFixed(1)} kg
             </p>
           </Card>
         </div>
@@ -138,8 +138,9 @@ export const Dashboard = () => {
                       </td>
                       <td className="px-4 py-3">{delivery.lieu}</td>
                       <td className="px-4 py-3">{delivery.client.nom}</td>
+                      <td className="px-4 py-3">{delivery.client?.nom ?? 'Client inconnu'}</td>
                       <td className="px-4 py-3 text-right font-semibold">
-                        {delivery.quantite_kg.toFixed(1)}
+                        {Number(delivery.quantite_kg).toFixed(1)}
                       </td>
                     </tr>
                   ))}

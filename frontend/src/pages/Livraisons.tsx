@@ -255,9 +255,9 @@ export const Livraisons = () => {
                         {new Date(delivery.date).toLocaleDateString('fr-FR')}
                       </td>
                       <td className="px-4 py-3">{delivery.lieu}</td>
-                      <td className="px-4 py-3">{delivery.client.nom}</td>
+                      <td className="px-4 py-3">{delivery.client?.nom ?? 'Client inconnu'}</td>
                       <td className="px-4 py-3 text-right font-semibold">
-                        {delivery.quantite_kg.toFixed(1)} kg
+                        {Number(delivery.quantite_kg ?? 0).toFixed(1)} kg
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button

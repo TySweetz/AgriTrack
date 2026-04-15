@@ -92,7 +92,10 @@ export const Inventaire = () => {
     setFormData({ nombre_paniers: '', poids_moyen_panier: '' });
   };
 
-  const totalStock = inventories.reduce((sum, inv) => sum + inv.stock_total_kg, 0);
+  const totalStock = inventories.reduce(
+    (sum: number, inv: Inventory) => sum + Number(inv.stock_total_kg),
+    0,
+  );
   const calculatedTotal =
     formData.nombre_paniers && formData.poids_moyen_panier
       ? (
@@ -231,7 +234,7 @@ export const Inventaire = () => {
                       <td className="px-4 py-3">{inventory.nombre_paniers}</td>
                       <td className="px-4 py-3">{inventory.poids_moyen_panier} kg</td>
                       <td className="px-4 py-3 text-right font-semibold text-sage-700">
-                        {inventory.stock_total_kg.toFixed(1)} kg
+                        {Number(inventory.stock_total_kg).toFixed(1)} kg
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
