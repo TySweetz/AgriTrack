@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { BarChart3, Package, Truck, Users } from 'lucide-react';
+import { BarChart3, FileText, Package, Truck, Users } from 'lucide-react';
 
 /**
  * Composant Navbar - Navigation bottom bar responsive (mobile-first)
@@ -14,6 +14,7 @@ export const Navbar = () => {
     { path: '/', icon: BarChart3, label: 'Dashboard' },
     { path: '/inventaire', icon: Package, label: 'Inventaire' },
     { path: '/livraisons', icon: Truck, label: 'Livraisons' },
+    { path: '/factures', icon: FileText, label: 'Factures' },
     { path: '/clients', icon: Users, label: 'Clients' },
   ];
 

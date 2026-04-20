@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, NotFoundException } from '@nestjs/common';
 import { DeliveryService } from './delivery.service';
 import { CreateDeliveryDto, UpdateDeliveryDto } from './delivery.dto';
 
@@ -23,6 +23,20 @@ export class DeliveryController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.deliveryService.findOne(id);
+  }
+
+  /**
+   * GET /deliveries/:id/document - Retourne les données prêtes à afficher/imprimer
+   */
+  @Get(':id/document')
+  async getDocument(@Param('id') id: string) {
+    const document = await this.deliveryService.getDocument(id);
+
+    if (!document) {
+      throw new NotFoundException('Livraison introuvable');
+    }
+
+    return document;
   }
 
   /**

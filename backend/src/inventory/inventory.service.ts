@@ -34,9 +34,16 @@ export class InventoryService {
    * Crée un nouveau stock
    */
   async create(dto: CreateInventoryDto) {
+    const inventoryDate = dto.date ? new Date(dto.date) : new Date();
+    const poidsMoyenBotte = dto.poids_moyen_botte || 5;
+
     const inventory = this.inventoryRepository.create({
-      nombre_paniers: dto.nombre_paniers,
-      poids_moyen_panier: dto.poids_moyen_panier || 5,
+      nombre_bottes: dto.nombre_bottes,
+      poids_moyen_botte: poidsMoyenBotte,
+      nombre_paniers: dto.nombre_bottes,
+      poids_moyen_panier: poidsMoyenBotte,
+      stock_total_kg: dto.nombre_bottes * poidsMoyenBotte,
+      date: inventoryDate,
     });
     return this.inventoryRepository.save(inventory);
   }
@@ -45,7 +52,33 @@ export class InventoryService {
    * Met à jour un stock
    */
   async update(id: string, dto: UpdateInventoryDto) {
-    await this.inventoryRepository.update(id, dto);
+    const updatePayload: Partial<InventoryEntity> = {};
+
+    if (dto.nombre_bottes !== undefined) {
+      updatePayload.nombre_bottes = dto.nombre_bottes;
+      updatePayload.nombre_paniers = dto.nombre_bottes;
+    }
+
+    if (dto.poids_moyen_botte !== undefined) {
+      updatePayload.poids_moyen_botte = dto.poids_moyen_botte;
+      updatePayload.poids_moyen_panier = dto.poids_moyen_botte;
+    }
+
+    if (dto.nombre_bottes !== undefined || dto.poids_moyen_botte !== undefined) {
+      const current = await this.findOne(id);
+
+      if (current) {
+        const nombreBottes = dto.nombre_bottes ?? current.nombre_bottes ?? current.nombre_paniers;
+        const poidsMoyenBotte = dto.poids_moyen_botte ?? current.poids_moyen_botte ?? current.poids_moyen_panier;
+        updatePayload.stock_total_kg = nombreBottes * poidsMoyenBotte;
+      }
+    }
+
+    if (dto.date) {
+      updatePayload.date = new Date(dto.date);
+    }
+
+    await this.inventoryRepository.update(id, updatePayload);
     return this.findOne(id);
   }
 
@@ -63,7 +96,7 @@ export class InventoryService {
   async getTotalStock() {
     const result = await this.inventoryRepository
       .createQueryBuilder('inventory')
-      .select('SUM(inventory.nombre_paniers * inventory.poids_moyen_panier)', 'total')
+      .select('SUM(COALESCE(inventory.nombre_bottes, inventory.nombre_paniers) * COALESCE(inventory.poids_moyen_botte, inventory.poids_moyen_panier))', 'total')
       .getRawOne();
     return result?.total ? parseFloat(result.total) : 0;
   }

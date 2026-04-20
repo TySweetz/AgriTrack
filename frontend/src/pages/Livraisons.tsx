@@ -4,12 +4,14 @@ import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { deliveriesApi, Delivery } from '../api/deliveries';
 import { clientsApi, Client } from '../api/clients';
-import { Trash2, Edit2 } from 'lucide-react';
+import { Trash2, Edit2, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Page Livraisons - Gestion des livraisons d'asperges
  */
 export const Livraisons = () => {
+  const navigate = useNavigate();
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
@@ -260,6 +262,13 @@ export const Livraisons = () => {
                         {Number(delivery.quantite_kg ?? 0).toFixed(1)} kg
                       </td>
                       <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => navigate(`/livraisons/${delivery.id}`)}
+                          className="text-sage-700 hover:text-sage-900 mr-3 inline-flex items-center gap-1"
+                          title="Voir le bon de livraison"
+                        >
+                          <FileText size={16} />
+                        </button>
                         <button
                           onClick={() => handleEdit(delivery)}
                           className="text-blue-600 hover:text-blue-800 mr-3 inline-flex items-center gap-1"

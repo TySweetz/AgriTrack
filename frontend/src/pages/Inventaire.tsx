@@ -4,11 +4,13 @@ import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { inventoryApi, Inventory } from '../api/inventory';
 import { Trash2, Edit2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Page Inventaire - Gestion des stocks d'asperges
  */
 export const Inventaire = () => {
+  const navigate = useNavigate();
   const [inventories, setInventories] = useState<Inventory[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,8 +19,9 @@ export const Inventaire = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    nombre_paniers: '',
-    poids_moyen_panier: '',
+    nombre_bottes: '',
+    poids_moyen_botte: '',
+    date: new Date().toISOString().split('T')[0],
   });
 
   useEffect(() => {
@@ -42,10 +45,11 @@ export const Inventaire = () => {
     e.preventDefault();
     try {
       const data = {
-        nombre_paniers: parseInt(formData.nombre_paniers),
-        poids_moyen_panier: formData.poids_moyen_panier
-          ? parseFloat(formData.poids_moyen_panier)
+        nombre_bottes: parseInt(formData.nombre_bottes),
+        poids_moyen_botte: formData.poids_moyen_botte
+          ? parseFloat(formData.poids_moyen_botte)
           : undefined,
+        date: new Date(formData.date).toISOString(),
       };
 
       if (editingId) {
@@ -56,7 +60,7 @@ export const Inventaire = () => {
         setSuccess('Stock ajouté avec succès');
       }
 
-      setFormData({ nombre_paniers: '', poids_moyen_panier: '' });
+      setFormData({ nombre_bottes: '', poids_moyen_botte: '', date: new Date().toISOString().split('T')[0] });
       setEditingId(null);
       setIsModalOpen(false);
       await fetchInventories();
@@ -67,8 +71,9 @@ export const Inventaire = () => {
 
   const handleEdit = (inventory: Inventory) => {
     setFormData({
-      nombre_paniers: inventory.nombre_paniers.toString(),
-      poids_moyen_panier: inventory.poids_moyen_panier.toString(),
+      nombre_bottes: Number(inventory.nombre_bottes ?? inventory.nombre_paniers ?? 0).toString(),
+      poids_moyen_botte: Number(inventory.poids_moyen_botte ?? inventory.poids_moyen_panier ?? 0).toString(),
+      date: new Date(inventory.date).toISOString().split('T')[0],
     });
     setEditingId(inventory.id);
     setIsModalOpen(true);
@@ -89,7 +94,7 @@ export const Inventaire = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setFormData({ nombre_paniers: '', poids_moyen_panier: '' });
+    setFormData({ nombre_bottes: '', poids_moyen_botte: '', date: new Date().toISOString().split('T')[0] });
   };
 
   const totalStock = inventories.reduce(
@@ -97,10 +102,10 @@ export const Inventaire = () => {
     0,
   );
   const calculatedTotal =
-    formData.nombre_paniers && formData.poids_moyen_panier
+    formData.nombre_bottes && formData.poids_moyen_botte
       ? (
-          parseInt(formData.nombre_paniers) *
-          parseFloat(formData.poids_moyen_panier)
+          parseInt(formData.nombre_bottes) *
+          parseFloat(formData.poids_moyen_botte)
         ).toFixed(1)
       : '0';
 
@@ -138,6 +143,14 @@ export const Inventaire = () => {
           >
             ➕ Ajouter un stock
           </Button>
+          <Button
+            onClick={() => navigate('/stock-soir')}
+            size="lg"
+            variant="secondary"
+            className="w-full md:w-auto mt-3 md:mt-0 md:ml-3"
+          >
+            Saisie stock du soir
+          </Button>
         </div>
 
         {/* Modal */}
@@ -149,14 +162,13 @@ export const Inventaire = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre de paniers
+                Date de saisie
               </label>
               <input
-                type="number"
-                min="0"
-                value={formData.nombre_paniers}
+                type="date"
+                value={formData.date}
                 onChange={(e) =>
-                  setFormData({ ...formData, nombre_paniers: e.target.value })
+                  setFormData({ ...formData, date: e.target.value })
                 }
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
@@ -165,15 +177,31 @@ export const Inventaire = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Poids moyen par panier (kg) - Défaut 5 kg
+                Nombre de bottes
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.nombre_bottes}
+                onChange={(e) =>
+                  setFormData({ ...formData, nombre_bottes: e.target.value })
+                }
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Poids moyen par botte (kg) - Défaut 5 kg
               </label>
               <input
                 type="number"
                 step="0.1"
                 min="0"
-                value={formData.poids_moyen_panier}
+                value={formData.poids_moyen_botte}
                 onChange={(e) =>
-                  setFormData({ ...formData, poids_moyen_panier: e.target.value })
+                  setFormData({ ...formData, poids_moyen_botte: e.target.value })
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
               />
@@ -219,7 +247,7 @@ export const Inventaire = () => {
                 <thead className="bg-gray-50 border-b">
                   <tr>
                     <th className="px-4 py-3 font-semibold text-gray-700">Date</th>
-                    <th className="px-4 py-3 font-semibold text-gray-700">Paniers</th>
+                    <th className="px-4 py-3 font-semibold text-gray-700">Bottes</th>
                     <th className="px-4 py-3 font-semibold text-gray-700">Poids moyen</th>
                     <th className="px-4 py-3 font-semibold text-gray-700 text-right">Total kg</th>
                     <th className="px-4 py-3 font-semibold text-gray-700 text-right">Actions</th>
@@ -231,8 +259,8 @@ export const Inventaire = () => {
                       <td className="px-4 py-3">
                         {new Date(inventory.date).toLocaleDateString('fr-FR')}
                       </td>
-                      <td className="px-4 py-3">{inventory.nombre_paniers}</td>
-                      <td className="px-4 py-3">{inventory.poids_moyen_panier} kg</td>
+                      <td className="px-4 py-3">{inventory.nombre_bottes ?? inventory.nombre_paniers}</td>
+                      <td className="px-4 py-3">{inventory.poids_moyen_botte ?? inventory.poids_moyen_panier} kg</td>
                       <td className="px-4 py-3 text-right font-semibold text-sage-700">
                         {Number(inventory.stock_total_kg).toFixed(1)} kg
                       </td>
