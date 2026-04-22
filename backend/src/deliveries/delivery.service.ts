@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { CompanySettingsService } from '../company-settings/company-settings.service';
+import { InventoryService } from '../inventory/inventory.service';
 import { DeliveryEntity } from './delivery.entity';
 import { CreateDeliveryDto, UpdateDeliveryDto } from './delivery.dto';
 
@@ -14,6 +15,7 @@ export class DeliveryService {
     @InjectRepository(DeliveryEntity)
     private readonly deliveryRepository: Repository<DeliveryEntity>,
     private readonly companySettingsService: CompanySettingsService,
+    private readonly inventoryService: InventoryService,
   ) {}
 
   /**
@@ -53,7 +55,7 @@ export class DeliveryService {
   }
 
   /**
-   * Crée une nouvelle livraison
+   * Crée une nouvelle livraison et décrémente le stock automatiquement
    */
   async create(dto: CreateDeliveryDto) {
     const deliveryDate = dto.date ? new Date(dto.date) : new Date();
@@ -66,7 +68,20 @@ export class DeliveryService {
       document_status: 'DRAFT',
     });
 
-    return this.deliveryRepository.save(delivery);
+    const savedDelivery = await this.deliveryRepository.save(delivery);
+
+    // Décrémenter le stock d'inventaire de la quantité livrée
+    try {
+      await this.inventoryService.decrementStockForDelivery(
+        Number(dto.quantite_kg),
+        deliveryDate,
+      );
+    } catch (error) {
+      console.error('Erreur lors du décrémentation du stock:', error);
+      // Ne pas échouer la livraison si le stock échoue
+    }
+
+    return savedDelivery;
   }
 
   /**
@@ -78,9 +93,25 @@ export class DeliveryService {
   }
 
   /**
-   * Supprime une livraison
+   * Supprime une livraison et restaure le stock
    */
   async remove(id: string) {
+    // Récupérer la livraison avant suppression pour restaurer le stock
+    const delivery = await this.findOne(id);
+
+    if (delivery) {
+      try {
+        // Restaurer le stock d'inventaire
+        await this.inventoryService.incrementStockForDeletedDelivery(
+          Number(delivery.quantite_kg),
+          delivery.date,
+        );
+      } catch (error) {
+        console.error('Erreur lors de la restauration du stock:', error);
+        // Ne pas échouer la suppression si la restauration échoue
+      }
+    }
+
     await this.deliveryRepository.delete(id);
     return { message: 'Livraison supprimée avec succès' };
   }
