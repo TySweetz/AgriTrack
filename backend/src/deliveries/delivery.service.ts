@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
+import { CompanySettingsService } from '../company-settings/company-settings.service';
 import { DeliveryEntity } from './delivery.entity';
 import { CreateDeliveryDto, UpdateDeliveryDto } from './delivery.dto';
 
@@ -12,6 +13,7 @@ export class DeliveryService {
   constructor(
     @InjectRepository(DeliveryEntity)
     private readonly deliveryRepository: Repository<DeliveryEntity>,
+    private readonly companySettingsService: CompanySettingsService,
   ) {}
 
   /**
@@ -93,11 +95,17 @@ export class DeliveryService {
       return null;
     }
 
+    const settings = await this.companySettingsService.getSettings();
+
     return {
       delivery,
       documentTitle: 'Bon de livraison',
       printableReference: delivery.numero_bon,
       printableDate: new Date(delivery.date).toLocaleDateString('fr-FR'),
+      signature: {
+        enabled: settings.signature_enabled_delivery,
+        url: settings.signature_url,
+      },
     };
   }
 

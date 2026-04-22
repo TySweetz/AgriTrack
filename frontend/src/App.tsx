@@ -8,6 +8,7 @@ import { BonLivraison } from './pages/BonLivraison';
 import { Factures } from './pages/Factures';
 import { FactureDetail } from './pages/FactureDetail';
 import { StockSoir } from './pages/StockSoir';
+import { ParametresEntreprise } from './pages/ParametresEntreprise';
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/stock-soir" element={<StockSoir />} />
             <Route path="/factures" element={<Factures />} />
             <Route path="/factures/:id" element={<FactureDetail />} />
+            <Route path="/parametres" element={<ParametresEntreprise />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

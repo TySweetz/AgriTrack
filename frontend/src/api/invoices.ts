@@ -21,6 +21,10 @@ export interface InvoiceDocument {
   documentTitle: string;
   printableReference: string;
   printablePeriod: string;
+  signature?: {
+    enabled: boolean;
+    url: string | null;
+  };
   invoice: Invoice;
 }
 

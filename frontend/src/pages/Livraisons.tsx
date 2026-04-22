@@ -16,6 +16,7 @@ export const Livraisons = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -25,6 +26,12 @@ export const Livraisons = () => {
     lieu: '',
     quantite_kg: '',
     client_id: '',
+  });
+
+  const [clientFormData, setClientFormData] = useState({
+    nom: '',
+    telephone: '',
+    adresse: '',
   });
 
   useEffect(() => {
@@ -111,6 +118,32 @@ export const Livraisons = () => {
     setFormData({ date: '', lieu: '', quantite_kg: '', client_id: '' });
   };
 
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!clientFormData.nom.trim()) {
+      setError('Le nom du client est requis');
+      return;
+    }
+
+    try {
+      const createdClient = await clientsApi.create({
+        nom: clientFormData.nom.trim(),
+        telephone: clientFormData.telephone.trim() || undefined,
+        adresse: clientFormData.adresse.trim() || undefined,
+      });
+
+      setClients((prev) => [...prev, createdClient].sort((a, b) => a.nom.localeCompare(b.nom)));
+      setFormData((prev) => ({ ...prev, client_id: createdClient.id }));
+      setIsClientModalOpen(false);
+      setClientFormData({ nom: '', telephone: '', adresse: '' });
+      setSuccess('Client cree et selectionne avec succes');
+      setError(null);
+    } catch {
+      setError('Erreur lors de la creation du client');
+    }
+  };
+
   return (
     <div className="pb-24 md:pb-0">
       <div className="p-4 max-w-6xl mx-auto">
@@ -181,19 +214,29 @@ export const Livraisons = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Client *
               </label>
-              <select
-                value={formData.client_id}
-                onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-              >
-                <option value="">-- Sélectionnez un client --</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.nom}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-2">
+                <select
+                  value={formData.client_id}
+                  onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                >
+                  <option value="">-- Sélectionnez un client --</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.nom}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsClientModalOpen(true)}
+                  className="w-full"
+                >
+                  Créer un client
+                </Button>
+              </div>
             </div>
 
             <div>
@@ -220,6 +263,60 @@ export const Livraisons = () => {
                 variant="secondary"
                 size="md"
                 onClick={handleCloseModal}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+            </div>
+          </form>
+        </Modal>
+
+        <Modal
+          title="Créer un client"
+          isOpen={isClientModalOpen}
+          onClose={() => setIsClientModalOpen(false)}
+        >
+          <form onSubmit={handleCreateClient} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+              <input
+                type="text"
+                value={clientFormData.nom}
+                onChange={(e) => setClientFormData({ ...clientFormData, nom: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+              <input
+                type="text"
+                value={clientFormData.telephone}
+                onChange={(e) => setClientFormData({ ...clientFormData, telephone: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
+              <input
+                type="text"
+                value={clientFormData.adresse}
+                onChange={(e) => setClientFormData({ ...clientFormData, adresse: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button type="submit" size="md" className="flex-1">
+                Créer
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                onClick={() => setIsClientModalOpen(false)}
                 className="flex-1"
               >
                 Annuler

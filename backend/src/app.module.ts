@@ -7,6 +7,7 @@ import { ClientModule } from './clients/client.module';
 import { DeliveryModule } from './deliveries/delivery.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { InvoiceModule } from './invoices/invoice.module';
+import { CompanySettingsModule } from './company-settings/company-settings.module';
 
 /**
  * Module principal de l'application NestJS
@@ -20,6 +21,7 @@ import { InvoiceModule } from './invoices/invoice.module';
     DeliveryModule,
     DashboardModule,
     InvoiceModule,
+    CompanySettingsModule,
   ],
 })
 export class AppModule {}

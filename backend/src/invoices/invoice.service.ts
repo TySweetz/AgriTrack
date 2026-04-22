@@ -4,6 +4,7 @@ import { Between, Like, Repository } from 'typeorm';
 import { InvoiceEntity } from './invoice.entity';
 import { DeliveryEntity } from '../deliveries/delivery.entity';
 import { GenerateInvoiceDto } from './invoice.dto';
+import { CompanySettingsService } from '../company-settings/company-settings.service';
 
 /**
  * Service pour la gestion des factures
@@ -15,6 +16,7 @@ export class InvoiceService {
     private readonly invoiceRepository: Repository<InvoiceEntity>,
     @InjectRepository(DeliveryEntity)
     private readonly deliveryRepository: Repository<DeliveryEntity>,
+    private readonly companySettingsService: CompanySettingsService,
   ) {}
 
   async findAll() {
@@ -85,11 +87,17 @@ export class InvoiceService {
       return null;
     }
 
+    const settings = await this.companySettingsService.getSettings();
+
     return {
       invoice,
       documentTitle: 'Facture',
       printableReference: invoice.numero_facture,
       printablePeriod: `${new Date(invoice.period_start).toLocaleDateString('fr-FR')} - ${new Date(invoice.period_end).toLocaleDateString('fr-FR')}`,
+      signature: {
+        enabled: settings.signature_enabled_invoice,
+        url: settings.signature_url,
+      },
     };
   }
 }

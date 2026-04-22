@@ -122,6 +122,17 @@ export const FactureDetail = () => {
             </tbody>
           </table>
         </div>
+
+        {document.signature?.enabled && document.signature.url && (
+          <div className="mt-8 border-t pt-6">
+            <p className="text-sm text-gray-500 mb-2">Signature entreprise</p>
+            <img
+              src={document.signature.url}
+              alt="Signature entreprise"
+              className="h-20 object-contain"
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

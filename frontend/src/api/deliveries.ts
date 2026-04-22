@@ -16,6 +16,10 @@ export interface DeliveryDocument {
   documentTitle: string;
   printableReference: string;
   printableDate: string;
+  signature?: {
+    enabled: boolean;
+    url: string | null;
+  };
   delivery: Delivery;
 }
 
