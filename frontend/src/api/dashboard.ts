@@ -4,7 +4,7 @@ import { Delivery } from './deliveries';
 export interface DashboardData {
   total_stock_kg: number;
   total_vendu_kg: number;
-  moyenne_kg_panier: number;
+  moyenne_kg_botte: number;
   livraisons_recentes: Delivery[];
   nombre_livraisons: number;
 }
@@ -21,7 +21,7 @@ export const dashboardApi = {
       ...data,
       total_stock_kg: typeof data.total_stock_kg === 'string' ? parseFloat(data.total_stock_kg) : data.total_stock_kg,
       total_vendu_kg: typeof data.total_vendu_kg === 'string' ? parseFloat(data.total_vendu_kg) : data.total_vendu_kg,
-      moyenne_kg_panier: typeof data.moyenne_kg_panier === 'string' ? parseFloat(data.moyenne_kg_panier) : data.moyenne_kg_panier,
+      moyenne_kg_botte: typeof data.moyenne_kg_botte === 'string' ? parseFloat(data.moyenne_kg_botte) : data.moyenne_kg_botte,
       livraisons_recentes: data.livraisons_recentes.map((delivery: any) => ({
         ...delivery,
         quantite_kg:

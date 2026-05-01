@@ -4,6 +4,11 @@ import { Dashboard } from './pages/Dashboard';
 import { Inventaire } from './pages/Inventaire';
 import { Livraisons } from './pages/Livraisons';
 import { Clients } from './pages/Clients';
+import { BonLivraison } from './pages/BonLivraison';
+import { Factures } from './pages/Factures';
+import { FactureDetail } from './pages/FactureDetail';
+import { StockSoir } from './pages/StockSoir';
+import { ParametresEntreprise } from './pages/ParametresEntreprise';
 import './App.css';
 
 function App() {
@@ -16,7 +21,12 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/inventaire" element={<Inventaire />} />
             <Route path="/livraisons" element={<Livraisons />} />
+            <Route path="/livraisons/:id" element={<BonLivraison />} />
             <Route path="/clients" element={<Clients />} />
+            <Route path="/stock-soir" element={<StockSoir />} />
+            <Route path="/factures" element={<Factures />} />
+            <Route path="/factures/:id" element={<FactureDetail />} />
+            <Route path="/parametres" element={<ParametresEntreprise />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

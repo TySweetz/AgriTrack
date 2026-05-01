@@ -98,12 +98,12 @@ export const Dashboard = () => {
             </p>
           </Card>
 
-          {/* Moyenne par panier */}
+          {/* Moyenne par botte */}
           <Card className="flex flex-col items-center justify-center text-center">
             <div className="text-4xl mb-2">⚖️</div>
-            <p className="text-gray-600 text-sm mb-1">Moy. panier</p>
+            <p className="text-gray-600 text-sm mb-1">Moy. botte</p>
             <p className="text-2xl md:text-3xl font-bold text-sage-700">
-              {Number(data.moyenne_kg_panier).toFixed(1)} kg
+              {Number(data.moyenne_kg_botte).toFixed(1)} kg
             </p>
           </Card>
         </div>
@@ -137,7 +137,6 @@ export const Dashboard = () => {
                         {new Date(delivery.date).toLocaleDateString('fr-FR')}
                       </td>
                       <td className="px-4 py-3">{delivery.lieu}</td>
-                      <td className="px-4 py-3">{delivery.client.nom}</td>
                       <td className="px-4 py-3">{delivery.client?.nom ?? 'Client inconnu'}</td>
                       <td className="px-4 py-3 text-right font-semibold">
                         {Number(delivery.quantite_kg).toFixed(1)}

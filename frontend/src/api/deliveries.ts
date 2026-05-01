@@ -6,8 +6,21 @@ export interface Delivery {
   date: string;
   lieu: string;
   quantite_kg: number;
+  numero_bon: string;
+  document_status: string;
   client_id: string;
   client: Client;
+}
+
+export interface DeliveryDocument {
+  documentTitle: string;
+  printableReference: string;
+  printableDate: string;
+  signature?: {
+    enabled: boolean;
+    url: string | null;
+  };
+  delivery: Delivery;
 }
 
 const normalizeDelivery = (delivery: any): Delivery => ({
@@ -31,6 +44,12 @@ export const deliveriesApi = {
   getOne: async (id: string): Promise<Delivery> => {
     const response = await apiClient.get(`/deliveries/${id}`);
     return normalizeDelivery(response.data);
+  },
+
+  // Récupère les données de document imprimable
+  getDocument: async (id: string): Promise<DeliveryDocument> => {
+    const response = await apiClient.get(`/deliveries/${id}/document`);
+    return response.data;
   },
 
   // Crée une nouvelle livraison

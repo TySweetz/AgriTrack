@@ -2,14 +2,16 @@
  * DTO pour créer un stock d'inventaire
  */
 export class CreateInventoryDto {
-  nombre_paniers!: number;
-  poids_moyen_panier?: number; // Défaut 5
+  nombre_bottes!: number;
+  poids_moyen_botte?: number; // Défaut 5
+  date?: string | Date;
 }
 
 /**
  * DTO pour mettre à jour un stock d'inventaire
  */
 export class UpdateInventoryDto {
-  nombre_paniers?: number;
-  poids_moyen_panier?: number;
+  nombre_bottes?: number;
+  poids_moyen_botte?: number;
+  date?: string | Date;
 }

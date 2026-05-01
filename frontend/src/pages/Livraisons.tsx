@@ -4,16 +4,19 @@ import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { deliveriesApi, Delivery } from '../api/deliveries';
 import { clientsApi, Client } from '../api/clients';
-import { Trash2, Edit2 } from 'lucide-react';
+import { Trash2, Edit2, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Page Livraisons - Gestion des livraisons d'asperges
  */
 export const Livraisons = () => {
+  const navigate = useNavigate();
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -23,6 +26,12 @@ export const Livraisons = () => {
     lieu: '',
     quantite_kg: '',
     client_id: '',
+  });
+
+  const [clientFormData, setClientFormData] = useState({
+    nom: '',
+    telephone: '',
+    adresse: '',
   });
 
   useEffect(() => {
@@ -109,6 +118,32 @@ export const Livraisons = () => {
     setFormData({ date: '', lieu: '', quantite_kg: '', client_id: '' });
   };
 
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!clientFormData.nom.trim()) {
+      setError('Le nom du client est requis');
+      return;
+    }
+
+    try {
+      const createdClient = await clientsApi.create({
+        nom: clientFormData.nom.trim(),
+        telephone: clientFormData.telephone.trim() || undefined,
+        adresse: clientFormData.adresse.trim() || undefined,
+      });
+
+      setClients((prev) => [...prev, createdClient].sort((a, b) => a.nom.localeCompare(b.nom)));
+      setFormData((prev) => ({ ...prev, client_id: createdClient.id }));
+      setIsClientModalOpen(false);
+      setClientFormData({ nom: '', telephone: '', adresse: '' });
+      setSuccess('Client cree et selectionne avec succes');
+      setError(null);
+    } catch {
+      setError('Erreur lors de la creation du client');
+    }
+  };
+
   return (
     <div className="pb-24 md:pb-0">
       <div className="p-4 max-w-6xl mx-auto">
@@ -179,19 +214,29 @@ export const Livraisons = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Client *
               </label>
-              <select
-                value={formData.client_id}
-                onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-              >
-                <option value="">-- Sélectionnez un client --</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.nom}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-2">
+                <select
+                  value={formData.client_id}
+                  onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                >
+                  <option value="">-- Sélectionnez un client --</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.nom}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsClientModalOpen(true)}
+                  className="w-full"
+                >
+                  Créer un client
+                </Button>
+              </div>
             </div>
 
             <div>
@@ -218,6 +263,60 @@ export const Livraisons = () => {
                 variant="secondary"
                 size="md"
                 onClick={handleCloseModal}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+            </div>
+          </form>
+        </Modal>
+
+        <Modal
+          title="Créer un client"
+          isOpen={isClientModalOpen}
+          onClose={() => setIsClientModalOpen(false)}
+        >
+          <form onSubmit={handleCreateClient} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+              <input
+                type="text"
+                value={clientFormData.nom}
+                onChange={(e) => setClientFormData({ ...clientFormData, nom: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+              <input
+                type="text"
+                value={clientFormData.telephone}
+                onChange={(e) => setClientFormData({ ...clientFormData, telephone: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
+              <input
+                type="text"
+                value={clientFormData.adresse}
+                onChange={(e) => setClientFormData({ ...clientFormData, adresse: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button type="submit" size="md" className="flex-1">
+                Créer
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                onClick={() => setIsClientModalOpen(false)}
                 className="flex-1"
               >
                 Annuler
@@ -260,6 +359,13 @@ export const Livraisons = () => {
                         {Number(delivery.quantite_kg ?? 0).toFixed(1)} kg
                       </td>
                       <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => navigate(`/livraisons/${delivery.id}`)}
+                          className="text-sage-700 hover:text-sage-900 mr-3 inline-flex items-center gap-1"
+                          title="Voir le bon de livraison"
+                        >
+                          <FileText size={16} />
+                        </button>
                         <button
                           onClick={() => handleEdit(delivery)}
                           className="text-blue-600 hover:text-blue-800 mr-3 inline-flex items-center gap-1"
