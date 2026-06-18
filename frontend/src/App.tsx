@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
@@ -17,6 +18,12 @@ import { ResetPassword } from './pages/ResetPassword';
 import { Profil } from './pages/Profil';
 
 // Pages vendeur
+=======
+import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { Navbar } from './components/Navbar';
+import { ProtectedRoute } from './components/ProtectedRoute';
+>>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
 import { Dashboard } from './pages/Dashboard';
 import { Inventaire } from './pages/Inventaire';
 import { Livraisons } from './pages/Livraisons';
@@ -26,6 +33,7 @@ import { Factures } from './pages/Factures';
 import { FactureDetail } from './pages/FactureDetail';
 import { StockSoir } from './pages/StockSoir';
 import { ParametresEntreprise } from './pages/ParametresEntreprise';
+<<<<<<< HEAD
 import { MesProduits } from './pages/MesProduits';
 import { CommandesRecues } from './pages/CommandesRecues';
 
@@ -55,11 +63,22 @@ function BuyerLayout() {
 }
 
 function SellerLayout() {
+=======
+import { Profil } from './pages/Profil';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
+import './App.css';
+
+function AppLayout() {
+>>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
       <Navbar />
       <main className="flex-1 pb-20 md:pb-0">
         <Routes>
+<<<<<<< HEAD
           <Route path="/" element={<ProtectedRoute requiredRole="agriculteur"><Dashboard /></ProtectedRoute>} />
           <Route path="/inventaire" element={<ProtectedRoute requiredRole="agriculteur"><Inventaire /></ProtectedRoute>} />
           <Route path="/livraisons" element={<ProtectedRoute requiredRole="agriculteur"><Livraisons /></ProtectedRoute>} />
@@ -71,6 +90,17 @@ function SellerLayout() {
           <Route path="/parametres" element={<ProtectedRoute requiredRole="agriculteur"><ParametresEntreprise /></ProtectedRoute>} />
           <Route path="/mes-produits" element={<ProtectedRoute requiredRole="agriculteur"><MesProduits /></ProtectedRoute>} />
           <Route path="/commandes-recues" element={<ProtectedRoute requiredRole="agriculteur"><CommandesRecues /></ProtectedRoute>} />
+=======
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/inventaire" element={<ProtectedRoute><Inventaire /></ProtectedRoute>} />
+          <Route path="/livraisons" element={<ProtectedRoute><Livraisons /></ProtectedRoute>} />
+          <Route path="/livraisons/:id" element={<ProtectedRoute><BonLivraison /></ProtectedRoute>} />
+          <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+          <Route path="/stock-soir" element={<ProtectedRoute><StockSoir /></ProtectedRoute>} />
+          <Route path="/factures" element={<ProtectedRoute><Factures /></ProtectedRoute>} />
+          <Route path="/factures/:id" element={<ProtectedRoute><FactureDetail /></ProtectedRoute>} />
+          <Route path="/parametres" element={<ProtectedRoute><ParametresEntreprise /></ProtectedRoute>} />
+>>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
           <Route path="/profil" element={<ProtectedRoute><Profil /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -79,15 +109,19 @@ function SellerLayout() {
   );
 }
 
+<<<<<<< HEAD
 function AppLayout() {
   const { user } = useAuth();
   return user?.role === 'acheteur' ? <BuyerLayout /> : <SellerLayout />;
 }
 
+=======
+>>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
 function App() {
   return (
     <Router>
       <AuthProvider>
+<<<<<<< HEAD
         <CartProvider>
           <ToastProvider>
             <Routes>
@@ -99,6 +133,17 @@ function App() {
             </Routes>
           </ToastProvider>
         </CartProvider>
+=======
+        <ToastProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/*" element={<AppLayout />} />
+          </Routes>
+        </ToastProvider>
+>>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
       </AuthProvider>
     </Router>
   );

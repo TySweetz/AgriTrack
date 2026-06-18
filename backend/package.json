@@ -38,7 +38,10 @@
     "@nestjs/cli": "^10.2.1",
     "@nestjs/schematics": "^10.0.2",
     "@types/bcrypt": "^5.0.2",
+<<<<<<< HEAD
     "@types/multer": "^1.4.11",
+=======
+>>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
     "@types/nodemailer": "^6.4.14",
     "@types/node": "^20.9.0",
     "@types/passport-jwt": "^4.0.1",

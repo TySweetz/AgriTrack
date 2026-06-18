@@ -9,8 +9,11 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { InvoiceModule } from './invoices/invoice.module';
 import { CompanySettingsModule } from './company-settings/company-settings.module';
 import { AuthModule } from './auth/auth.module';
+<<<<<<< HEAD
 import { ProductModule } from './products/product.module';
 import { OrderModule } from './orders/order.module';
+=======
+>>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
 
 @Module({
   imports: [
@@ -23,8 +26,11 @@ import { OrderModule } from './orders/order.module';
     InvoiceModule,
     CompanySettingsModule,
     AuthModule,
+<<<<<<< HEAD
     ProductModule,
     OrderModule,
+=======
+>>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
   ],
 })
 export class AppModule {}
