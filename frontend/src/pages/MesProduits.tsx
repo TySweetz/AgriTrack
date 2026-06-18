@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { productsApi, Product } from '../api/products';
 import { useToast } from '../context/ToastContext';
+<<<<<<< Updated upstream
+=======
+import { useAuth } from '../context/AuthContext';
+>>>>>>> Stashed changes
 import { CATEGORIES, LABELS, UNITES } from '../constants/product';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -22,11 +26,19 @@ export const MesProduits = () => {
   const [previewUrl, setPreviewUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
+<<<<<<< Updated upstream
+=======
+  const { user } = useAuth();
+>>>>>>> Stashed changes
 
   const load = () =>
     productsApi.getMine().then((r) => { setProducts(r.data); setLoading(false); });
 
+<<<<<<< Updated upstream
   useEffect(() => { load(); }, []);
+=======
+  useEffect(() => { load(); }, [user?.id]);
+>>>>>>> Stashed changes
 
   const openCreate = () => {
     setEditing(null);

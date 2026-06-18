@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 import { useLocation, Link } from 'react-router-dom';
 import {
@@ -12,10 +13,22 @@ import { Link } from 'react-router-dom';
 import { BarChart3, FileText, Package, Settings, Truck, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 >>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
+=======
+import { useEffect, useState } from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import {
+  BarChart3, ClipboardList, FileText, Home, Package,
+  Settings, ShoppingBag, ShoppingCart, Truck, Users,
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { ordersApi } from '../api/orders';
+>>>>>>> Stashed changes
 
 export const Navbar = () => {
   const location = useLocation();
   const { user } = useAuth();
+<<<<<<< Updated upstream
 <<<<<<< HEAD
   const { count } = useCart();
 =======
@@ -28,6 +41,30 @@ export const Navbar = () => {
     { path: '/', icon: BarChart3, label: 'Dashboard' },
     { path: '/mes-produits', icon: ShoppingBag, label: 'Mes produits' },
     { path: '/commandes-recues', icon: ClipboardList, label: 'Commandes' },
+=======
+  const { count } = useCart();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (user?.role !== 'agriculteur') return;
+
+    ordersApi.getPendingCount().then((r) => setPendingCount(r.data.count)).catch(() => {});
+
+    const interval = setInterval(() => {
+      ordersApi.getPendingCount().then((r) => setPendingCount(r.data.count)).catch(() => {});
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user?.role]);
+
+  const isActive = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
+  const vendeurItems = [
+    { path: '/', icon: BarChart3, label: 'Dashboard' },
+    { path: '/mes-produits', icon: ShoppingBag, label: 'Mes produits' },
+    { path: '/commandes-recues', icon: ClipboardList, label: 'Commandes', badge: pendingCount || null },
+>>>>>>> Stashed changes
     { path: '/inventaire', icon: Package, label: 'Inventaire' },
     { path: '/livraisons', icon: Truck, label: 'Livraisons' },
     { path: '/factures', icon: FileText, label: 'Factures' },
@@ -36,6 +73,7 @@ export const Navbar = () => {
   ];
 
   const acheteurItems = [
+<<<<<<< Updated upstream
     { path: '/marketplace', icon: ShoppingBag, label: 'Marketplace' },
     { path: '/panier', icon: ShoppingCart, label: 'Panier', badge: count > 0 ? count : null },
     { path: '/mes-commandes', icon: ClipboardList, label: 'Commandes' },
@@ -43,6 +81,15 @@ export const Navbar = () => {
 
   const navItems = user?.role === 'agriculteur' ? vendeurItems : acheteurItems;
 
+=======
+    { path: '/', icon: Home, label: 'Accueil' },
+    { path: '/marketplace', icon: ShoppingBag, label: 'Marketplace' },
+    { path: '/panier', icon: ShoppingCart, label: 'Panier', badge: count || null },
+    { path: '/mes-commandes', icon: ClipboardList, label: 'Mes commandes' },
+  ];
+
+  const navItems = user?.role === 'acheteur' ? acheteurItems : vendeurItems;
+>>>>>>> Stashed changes
   const displayName = user
     ? user.role === 'acheteur' && user.pseudo ? user.pseudo : user.nom
     : '';
@@ -52,15 +99,20 @@ export const Navbar = () => {
       <div className="flex md:flex-col h-16 md:h-auto md:p-6 md:flex-1">
         {/* Logo desktop */}
         <div className="hidden md:block mb-6">
+<<<<<<< Updated upstream
 <<<<<<< HEAD
           <Link to={user?.role === 'agriculteur' ? '/' : '/marketplace'} className="text-2xl font-bold text-sage-700">
             🌱 AgriTrack
           </Link>
+=======
+          <Link to="/" className="text-2xl font-bold text-sage-700">🌱 AgriTrack</Link>
+>>>>>>> Stashed changes
         </div>
 
         {/* Navigation */}
         <div className="flex flex-row md:flex-col gap-0 flex-1 md:gap-1 overflow-x-auto md:overflow-visible">
           {navItems.map(({ path, icon: Icon, label, badge }: any) => (
+<<<<<<< Updated upstream
             <Link
               key={path}
               to={path}
@@ -81,22 +133,45 @@ export const Navbar = () => {
                   ? 'bg-sage-100 text-sage-700'
                   : 'text-gray-600 hover:bg-gray-50'
 >>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
+=======
+            <Link
+              key={path}
+              to={path}
+              className={`flex-shrink-0 md:flex-none flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-2 px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium transition-colors rounded-lg ${
+                isActive(path) ? 'bg-sage-100 text-sage-700' : 'text-gray-600 hover:bg-gray-50'
+>>>>>>> Stashed changes
               }`}
             >
               <span className="relative">
                 <Icon size={20} />
+<<<<<<< Updated upstream
                 {badge && (
                   <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                     {badge}
                   </span>
                 )}
+=======
+                {badge ? (
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {badge}
+                  </span>
+                ) : null}
+>>>>>>> Stashed changes
               </span>
               <span className="hidden md:inline">{label}</span>
+              {badge ? (
+                <span className="hidden md:inline ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+                  {badge}
+                </span>
+              ) : null}
             </Link>
           ))}
         </div>
 
+<<<<<<< Updated upstream
 <<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
         {/* Profil */}
         {user && (
           <div className="hidden md:block mt-auto pt-4 border-t border-gray-100">
@@ -114,6 +189,7 @@ export const Navbar = () => {
                 <p className="text-xs text-gray-500 capitalize">{user.role}</p>
               </div>
             </Link>
+<<<<<<< Updated upstream
 =======
         {/* Profil — desktop en bas, mobile dans la nav */}
         {user && (
@@ -138,6 +214,8 @@ export const Navbar = () => {
               );
             })()}
 >>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
+=======
+>>>>>>> Stashed changes
           </div>
         )}
       </div>

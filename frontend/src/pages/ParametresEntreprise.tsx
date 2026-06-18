@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { companySettingsApi, CompanySettings } from '../api/companySettings';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Page de gestion de la signature entreprise
  */
 export const ParametresEntreprise = () => {
+  const { user } = useAuth();
   const [settings, setSettings] = useState<CompanySettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -18,7 +20,7 @@ export const ParametresEntreprise = () => {
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [user?.id]);
 
   const fetchSettings = async () => {
     try {

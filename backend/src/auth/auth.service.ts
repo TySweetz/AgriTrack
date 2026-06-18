@@ -119,6 +119,20 @@ export class AuthService {
     };
   }
 
+<<<<<<< Updated upstream
+=======
+  async getPublicVendeur(id: string) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('Vendeur introuvable');
+    return {
+      id: user.id,
+      nom: user.nom,
+      telephone: user.telephone,
+      adresse: user.adresse,
+    };
+  }
+
+>>>>>>> Stashed changes
   private buildResponse(user: UserEntity) {
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {

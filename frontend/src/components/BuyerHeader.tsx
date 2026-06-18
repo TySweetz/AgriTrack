@@ -21,6 +21,7 @@ export const BuyerHeader = () => {
 
         {/* Nav centrale */}
         <nav className="hidden md:flex items-center gap-1">
+<<<<<<< Updated upstream
           <Link
             to="/marketplace"
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -37,6 +38,25 @@ export const BuyerHeader = () => {
           >
             Mes commandes
           </Link>
+=======
+          {[
+            { to: '/', label: 'Accueil', exact: true },
+            { to: '/marketplace', label: 'Marketplace' },
+            { to: '/mes-commandes', label: 'Mes commandes' },
+          ].map(({ to, label, exact }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                exact ? location.pathname === to : isActive(to)
+                  ? 'bg-sage-100 text-sage-700'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+>>>>>>> Stashed changes
         </nav>
 
         {/* Actions droite */}

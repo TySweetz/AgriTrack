@@ -1,4 +1,8 @@
 import { useEffect, useState, useMemo } from 'react';
+<<<<<<< Updated upstream
+=======
+import { Link } from 'react-router-dom';
+>>>>>>> Stashed changes
 import { ShoppingCart, SlidersHorizontal, X } from 'lucide-react';
 import { productsApi, Product } from '../api/products';
 import { useCart } from '../context/CartContext';
@@ -251,7 +255,11 @@ export const Marketplace = () => {
                       {product.description && (
                         <p className="text-xs text-gray-500 mb-2 line-clamp-2">{product.description}</p>
                       )}
+<<<<<<< Updated upstream
                       <p className="text-xs text-gray-400 mb-3">🌱 {product.vendeur.nom}</p>
+=======
+                      <Link to={`/vendeur/${product.vendeurId}`} className="text-xs text-gray-400 mb-3 hover:text-sage-600 hover:underline block">🌱 {product.vendeur.nom}</Link>
+>>>>>>> Stashed changes
                       <div className="mt-auto">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-base font-bold text-sage-700">
@@ -263,6 +271,7 @@ export const Marketplace = () => {
                           </span>
                         </div>
                         <div className="flex gap-2">
+<<<<<<< Updated upstream
                           <input
                             type="number"
                             min={0.1}
@@ -272,6 +281,22 @@ export const Marketplace = () => {
                             onChange={(e) => setQtyMap((m) => ({ ...m, [product.id]: Number(e.target.value) }))}
                             className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-sage-400"
                           />
+=======
+                          <div className="flex items-center rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
+                            <button
+                              onClick={() => setQtyMap((m) => ({ ...m, [product.id]: Math.max(1, (m[product.id] ?? 1) - 1) }))}
+                              className="w-8 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-sage-700 transition-colors font-semibold text-base"
+                            >−</button>
+                            <span className="w-8 text-center text-sm font-semibold text-gray-800 select-none">
+                              {qtyMap[product.id] ?? 1}
+                            </span>
+                            <button
+                              onClick={() => setQtyMap((m) => ({ ...m, [product.id]: Math.min(Number(product.stock), (m[product.id] ?? 1) + 1) }))}
+                              disabled={Number(product.stock) <= 0}
+                              className="w-8 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-sage-700 transition-colors font-semibold text-base disabled:opacity-30"
+                            >+</button>
+                          </div>
+>>>>>>> Stashed changes
                           <button
                             onClick={() => handleAdd(product)}
                             disabled={Number(product.stock) <= 0}

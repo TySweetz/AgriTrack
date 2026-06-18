@@ -19,6 +19,13 @@ export class ProductService {
     return this.repo.find({ where: { vendeurId }, order: { createdAt: 'DESC' } });
   }
 
+<<<<<<< Updated upstream
+=======
+  findByVendeurPublic(vendeurId: string) {
+    return this.repo.find({ where: { vendeurId, actif: true }, order: { createdAt: 'DESC' } });
+  }
+
+>>>>>>> Stashed changes
   async findOne(id: string) {
     const p = await this.repo.findOne({ where: { id } });
     if (!p) throw new NotFoundException('Produit introuvable');

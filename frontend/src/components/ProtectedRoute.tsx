@@ -20,11 +20,15 @@ export const ProtectedRoute = ({ children, requiredRole }: Props) => {
   if (!user) return <Navigate to="/login" replace />;
 
   if (requiredRole && user.role !== requiredRole) {
+<<<<<<< Updated upstream
 <<<<<<< HEAD
     return <Navigate to={user.role === 'acheteur' ? '/marketplace' : '/'} replace />;
 =======
     return <Navigate to="/" replace />;
 >>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
+=======
+    return <Navigate to={user.role === 'acheteur' ? '/marketplace' : '/'} replace />;
+>>>>>>> Stashed changes
   }
 
   return <>{children}</>;

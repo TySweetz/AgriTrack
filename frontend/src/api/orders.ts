@@ -35,4 +35,10 @@ export const ordersApi = {
   getOne: (id: string) => apiClient.get<Order>(`/orders/${id}`),
   updateStatus: (id: string, statut: string) =>
     apiClient.patch<Order>(`/orders/${id}/statut`, { statut }),
+<<<<<<< Updated upstream
+=======
+
+  getPendingCount: () =>
+    apiClient.get<{ count: number }>('/orders/commandes-recues/pending-count'),
+>>>>>>> Stashed changes
 };

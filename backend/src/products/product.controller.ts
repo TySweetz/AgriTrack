@@ -26,6 +26,14 @@ export class ProductController {
     return this.service.findByVendeur(req.user.id);
   }
 
+<<<<<<< Updated upstream
+=======
+  @Get('vendeur/:vendeurId/public')
+  findByVendeurPublic(@Param('vendeurId') vendeurId: string) {
+    return this.service.findByVendeurPublic(vendeurId);
+  }
+
+>>>>>>> Stashed changes
   @UseGuards(JwtAuthGuard)
   @Post('upload')
   @UseInterceptors(

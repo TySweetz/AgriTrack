@@ -9,11 +9,16 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { InvoiceModule } from './invoices/invoice.module';
 import { CompanySettingsModule } from './company-settings/company-settings.module';
 import { AuthModule } from './auth/auth.module';
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 import { ProductModule } from './products/product.module';
 import { OrderModule } from './orders/order.module';
 =======
 >>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
+=======
+import { ProductModule } from './products/product.module';
+import { OrderModule } from './orders/order.module';
+>>>>>>> Stashed changes
 
 @Module({
   imports: [
@@ -26,11 +31,16 @@ import { OrderModule } from './orders/order.module';
     InvoiceModule,
     CompanySettingsModule,
     AuthModule,
+<<<<<<< Updated upstream
 <<<<<<< HEAD
     ProductModule,
     OrderModule,
 =======
 >>>>>>> 4eab4992ae8921ea84ed85e277dcd5509c9789be
+=======
+    ProductModule,
+    OrderModule,
+>>>>>>> Stashed changes
   ],
 })
 export class AppModule {}

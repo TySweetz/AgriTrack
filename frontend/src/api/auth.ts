@@ -41,4 +41,12 @@ export const authApi = {
     apiClient.patch<AuthResponse>('/auth/me/role', { role }),
 
   getMe: () => apiClient.get<AuthUser>('/auth/me'),
+<<<<<<< Updated upstream
+=======
+
+  getPublicVendeur: (id: string) =>
+    apiClient.get<{ id: string; nom: string; telephone?: string; adresse?: string }>(
+      `/auth/vendeurs/${id}/public`,
+    ),
+>>>>>>> Stashed changes
 };

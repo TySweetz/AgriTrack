@@ -23,6 +23,14 @@ export class OrderController {
     return this.service.findByVendeur(req.user.id);
   }
 
+<<<<<<< Updated upstream
+=======
+  @Get('commandes-recues/pending-count')
+  countPending(@Request() req: any) {
+    return this.service.countPending(req.user.id);
+  }
+
+>>>>>>> Stashed changes
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);

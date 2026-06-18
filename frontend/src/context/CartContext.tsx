@@ -18,18 +18,42 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | null>(null);
 
+<<<<<<< Updated upstream
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('cart') || '[]');
+=======
+const cartKey = (userId?: string) => `cart_${userId || 'guest'}`;
+
+export const CartProvider = ({ children, userId }: { children: ReactNode; userId?: string }) => {
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(cartKey(userId)) || '[]');
+>>>>>>> Stashed changes
     } catch {
       return [];
     }
   });
 
+<<<<<<< Updated upstream
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
+=======
+  // Reload cart when user changes
+  useEffect(() => {
+    try {
+      setItems(JSON.parse(localStorage.getItem(cartKey(userId)) || '[]'));
+    } catch {
+      setItems([]);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    localStorage.setItem(cartKey(userId), JSON.stringify(items));
+  }, [items, userId]);
+>>>>>>> Stashed changes
 
   const add = (product: Product, quantite: number) => {
     setItems((prev) => {

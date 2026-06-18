@@ -49,6 +49,10 @@ export const Profil = () => {
         role === 'agriculteur' ? 'Mode Agriculteur activé 🌱' : 'Mode Acheteur activé 🛒',
         'success',
       );
+<<<<<<< Updated upstream
+=======
+      navigate('/');
+>>>>>>> Stashed changes
     } catch {
       addToast('Erreur lors du changement de rôle', 'error');
     } finally {
@@ -64,6 +68,10 @@ export const Profil = () => {
       await updateMe({ nom: agriForm.nom, telephone: agriForm.telephone });
       await switchRole('agriculteur');
       addToast('Mode Agriculteur activé 🌱', 'success');
+<<<<<<< Updated upstream
+=======
+      navigate('/');
+>>>>>>> Stashed changes
     } catch {
       addToast('Erreur lors du changement de rôle', 'error');
     } finally {
@@ -79,6 +87,10 @@ export const Profil = () => {
       await updateMe({ pseudo: pseudoForm });
       await switchRole('acheteur');
       addToast('Mode Acheteur activé 🛒', 'success');
+<<<<<<< Updated upstream
+=======
+      navigate('/');
+>>>>>>> Stashed changes
     } catch {
       addToast('Erreur lors du changement de rôle', 'error');
     } finally {

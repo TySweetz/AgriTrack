@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import { ordersApi, Order } from '../api/orders';
+<<<<<<< Updated upstream
+=======
+import { useAuth } from '../context/AuthContext';
+>>>>>>> Stashed changes
 
 const statutLabel: Record<string, { label: string; color: string }> = {
   en_attente: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700' },
@@ -11,13 +15,25 @@ const statutLabel: Record<string, { label: string; color: string }> = {
 export const MesCommandes = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+<<<<<<< Updated upstream
 
   useEffect(() => {
+=======
+  const { user } = useAuth();
+
+  useEffect(() => {
+    setOrders([]);
+    setLoading(true);
+>>>>>>> Stashed changes
     ordersApi.getMine().then((r) => {
       setOrders(r.data);
       setLoading(false);
     });
+<<<<<<< Updated upstream
   }, []);
+=======
+  }, [user?.id]);
+>>>>>>> Stashed changes
 
   if (loading) {
     return (

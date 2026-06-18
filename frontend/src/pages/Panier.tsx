@@ -70,14 +70,22 @@ export const Panier = () => {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
+<<<<<<< Updated upstream
                 onClick={() => updateQty(product.id, quantite - 0.5)}
+=======
+                onClick={() => updateQty(product.id, quantite - 1)}
+>>>>>>> Stashed changes
                 className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
               >
                 <Minus size={12} />
               </button>
               <span className="w-10 text-center text-sm font-medium">{quantite}</span>
               <button
+<<<<<<< Updated upstream
                 onClick={() => updateQty(product.id, quantite + 0.5)}
+=======
+                onClick={() => updateQty(product.id, quantite + 1)}
+>>>>>>> Stashed changes
                 className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
               >
                 <Plus size={12} />

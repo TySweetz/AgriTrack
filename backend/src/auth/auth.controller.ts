@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 import { Body, Controller, Get, Patch, Post, Request, UseGuards } from '@nestjs/common';
+=======
+import { Body, Controller, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
+>>>>>>> Stashed changes
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -49,4 +53,12 @@ export class AuthController {
   getMe(@Request() req: any) {
     return this.authService.getMe(req.user.id);
   }
+<<<<<<< Updated upstream
+=======
+
+  @Get('vendeurs/:id/public')
+  getPublicVendeur(@Param('id') id: string) {
+    return this.authService.getPublicVendeur(id);
+  }
+>>>>>>> Stashed changes
 }

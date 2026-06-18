@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { ordersApi, Order } from '../api/orders';
 import { useToast } from '../context/ToastContext';
+<<<<<<< Updated upstream
+=======
+import { useAuth } from '../context/AuthContext';
+>>>>>>> Stashed changes
 
 const statutLabel: Record<string, { label: string; color: string }> = {
   en_attente: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700' },
@@ -13,11 +17,19 @@ export const CommandesRecues = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToast } = useToast();
+<<<<<<< Updated upstream
+=======
+  const { user } = useAuth();
+>>>>>>> Stashed changes
 
   const load = () =>
     ordersApi.getReceived().then((r) => { setOrders(r.data); setLoading(false); });
 
+<<<<<<< Updated upstream
   useEffect(() => { load(); }, []);
+=======
+  useEffect(() => { load(); }, [user?.id]);
+>>>>>>> Stashed changes
 
   const updateStatus = async (id: string, statut: string) => {
     try {

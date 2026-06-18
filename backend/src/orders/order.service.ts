@@ -47,6 +47,13 @@ export class OrderService {
       items.push(item);
 
       product.stock = Number(product.stock) - itemDto.quantite;
+<<<<<<< Updated upstream
+=======
+      if (product.stock <= 0) {
+        product.stock = 0;
+        product.actif = false;
+      }
+>>>>>>> Stashed changes
       await this.productRepo.save(product);
     }
 
@@ -88,4 +95,14 @@ export class OrderService {
     order.statut = dto.statut as OrderStatus;
     return this.orderRepo.save(order);
   }
+<<<<<<< Updated upstream
+=======
+
+  async countPending(vendeurId: string) {
+    const count = await this.orderRepo.count({
+      where: { vendeurId, statut: OrderStatus.EN_ATTENTE },
+    });
+    return { count };
+  }
+>>>>>>> Stashed changes
 }
