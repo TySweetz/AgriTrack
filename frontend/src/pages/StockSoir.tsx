@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { inventorySnapshotsApi, InventorySnapshot } from '../api/inventory';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Page Stock du soir - saisie rapide du stock restant
  */
 export const StockSoir = () => {
+  const { user } = useAuth();
   const [snapshots, setSnapshots] = useState<InventorySnapshot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export const StockSoir = () => {
 
   useEffect(() => {
     fetchSnapshots();
-  }, []);
+  }, [user?.id]);
 
   const fetchSnapshots = async () => {
     try {

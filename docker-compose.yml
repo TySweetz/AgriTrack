@@ -32,6 +32,10 @@ services:
       DATABASE_URL: postgres://admin:admin@db:5432/asperges
       PORT: 3000
       NODE_ENV: development
+      JWT_SECRET: agritrack-jwt-secret-change-in-prod
+      SMTP_USER: ton_email@gmail.com
+      SMTP_PASS: ton_app_password_gmail
+      APP_URL: http://localhost:8080
     volumes:
       - ./backend/src:/app/src
       - backend_uploads:/app/uploads

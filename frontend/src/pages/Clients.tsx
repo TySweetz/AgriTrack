@@ -4,11 +4,13 @@ import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { clientsApi, Client } from '../api/clients';
 import { Trash2, Edit2, Phone, MapPin } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Page Clients - Gestion des clients acheteurs
  */
 export const Clients = () => {
+  const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,7 +26,7 @@ export const Clients = () => {
 
   useEffect(() => {
     fetchClients();
-  }, []);
+  }, [user?.id]);
 
   const fetchClients = async () => {
     try {

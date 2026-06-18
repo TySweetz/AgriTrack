@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ValidationPipe } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
@@ -11,14 +12,17 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const uploadsDir = join(process.cwd(), 'uploads');
+  const uploadsProductsDir = join(uploadsDir, 'products');
 
-  if (!existsSync(uploadsDir)) {
-    mkdirSync(uploadsDir, { recursive: true });
-  }
+  [uploadsDir, uploadsProductsDir].forEach((dir) => {
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  });
 
   app.useStaticAssets(uploadsDir, {
     prefix: '/uploads/',
   });
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   // Activer CORS pour tous les domaines (V1 accepte *)
   app.enableCors({
