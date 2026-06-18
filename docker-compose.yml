@@ -1,0 +1,60 @@
+services:
+  # Service PostgreSQL
+  db:
+    image: postgres:15
+    container_name: agritrack-db
+    environment:
+      POSTGRES_DB: asperges
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d asperges"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Service Backend NestJS
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agritrack-backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://admin:admin@db:5432/asperges
+      PORT: 3000
+      NODE_ENV: development
+      JWT_SECRET: agritrack-jwt-secret-change-in-prod
+      SMTP_USER: ton_email@gmail.com
+      SMTP_PASS: ton_app_password_gmail
+      APP_URL: http://localhost:8080
+    volumes:
+      - ./backend/src:/app/src
+      - backend_uploads:/app/uploads
+    restart: unless-stopped
+
+  # Service Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agritrack-frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:3000
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  backend_uploads:
