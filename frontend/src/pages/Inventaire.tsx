@@ -5,12 +5,14 @@ import { Modal } from '../components/Modal';
 import { inventoryApi, Inventory } from '../api/inventory';
 import { Trash2, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Page Inventaire - Gestion des stocks d'asperges
  */
 export const Inventaire = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [inventories, setInventories] = useState<Inventory[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,7 +28,7 @@ export const Inventaire = () => {
 
   useEffect(() => {
     fetchInventories();
-  }, []);
+  }, [user?.id]);
 
   const fetchInventories = async () => {
     try {

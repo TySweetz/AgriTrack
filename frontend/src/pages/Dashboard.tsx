@@ -4,11 +4,13 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { dashboardApi, DashboardData } from '../api/dashboard';
 import { Package, Truck, Users } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Page Dashboard - Affiche les métriques clés et les récentes livraisons
  */
 export const Dashboard = () => {
+  const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export const Dashboard = () => {
     // Actualiser les données toutes les 30 secondes
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user?.id]);
 
   if (loading) {
     return (

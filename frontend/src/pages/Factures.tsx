@@ -6,12 +6,14 @@ import { clientsApi, Client } from '../api/clients';
 import { invoicesApi, Invoice } from '../api/invoices';
 import { Printer, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Page Factures - génération mensuelle et consultation simple
  */
 export const Factures = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,7 @@ export const Factures = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user?.id]);
 
   const fetchData = async () => {
     try {

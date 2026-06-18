@@ -8,10 +8,10 @@ import { DeliveryModule } from './deliveries/delivery.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { InvoiceModule } from './invoices/invoice.module';
 import { CompanySettingsModule } from './company-settings/company-settings.module';
+import { AuthModule } from './auth/auth.module';
+import { ProductModule } from './products/product.module';
+import { OrderModule } from './orders/order.module';
 
-/**
- * Module principal de l'application NestJS
- */
 @Module({
   imports: [
     TypeOrmModule.forRoot(getDatabaseConfig()),
@@ -22,6 +22,9 @@ import { CompanySettingsModule } from './company-settings/company-settings.modul
     DashboardModule,
     InvoiceModule,
     CompanySettingsModule,
+    AuthModule,
+    ProductModule,
+    OrderModule,
   ],
 })
 export class AppModule {}
