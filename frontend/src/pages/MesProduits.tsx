@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { productsApi, Product } from '../api/products';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { CATEGORIES, LABELS, UNITES } from '../constants/product';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { getPhotoUrl } from '../utils/media';
 
 const emptyForm = {
   nom: '', description: '', prix: '', unite: 'kg', stock: '',
@@ -24,9 +24,19 @@ export const MesProduits = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const load = () =>
-    productsApi.getMine().then((r) => { setProducts(r.data); setLoading(false); });
+    productsApi.getMine().then((r) => {
+      setProducts(r.data);
+      setLoading(false);
+      const editId = searchParams.get('edit');
+      if (editId) {
+        const match = r.data.find((p) => p.id === editId);
+        if (match) openEdit(match);
+        setSearchParams({}, { replace: true });
+      }
+    });
 
   useEffect(() => { load(); }, [user?.id]);
 
@@ -44,8 +54,7 @@ export const MesProduits = () => {
       unite: p.unite, stock: String(p.stock), categorie: p.categorie,
       label: p.label || 'Conventionnel', photo: p.photo || '', actif: p.actif,
     });
-    const url = p.photo ? (p.photo.startsWith('http') ? p.photo : `${API_URL}${p.photo}`) : '';
-    setPreviewUrl(url);
+    setPreviewUrl(getPhotoUrl(p.photo) || '');
     setShowModal(true);
   };
 
@@ -102,8 +111,7 @@ export const MesProduits = () => {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  const photoDisplayUrl = (p: Product) =>
-    p.photo ? (p.photo.startsWith('http') ? p.photo : `${API_URL}${p.photo}`) : null;
+  const photoDisplayUrl = (p: Product) => getPhotoUrl(p.photo);
 
   return (
     <div className="p-4 md:p-6">
@@ -133,18 +141,24 @@ export const MesProduits = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((p) => (
             <div key={p.id} className={`bg-white rounded-xl border overflow-hidden ${!p.actif ? 'opacity-60' : 'border-gray-200'}`}>
-              {photoDisplayUrl(p) ? (
-                <img src={photoDisplayUrl(p)!} alt={p.nom} className="h-36 w-full object-cover" />
-              ) : (
-                <div className="h-36 bg-sage-50 flex items-center justify-center text-3xl">
-                  {CATEGORIES.find((c) => c.value === p.categorie)?.emoji ?? '🌿'}
-                </div>
-              )}
+              <Link to={`/mes-produits/${p.id}`}>
+                {photoDisplayUrl(p) ? (
+                  <img src={photoDisplayUrl(p)!} alt={p.nom} className="h-36 w-full object-cover" />
+                ) : (
+                  <div className="h-36 bg-sage-50 flex items-center justify-center text-3xl">
+                    {CATEGORIES.find((c) => c.value === p.categorie)?.emoji ?? '🌿'}
+                  </div>
+                )}
+              </Link>
               <div className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-1">
+                <Link to={`/mes-produits/${p.id}`} className="flex items-start justify-between gap-2 mb-1 hover:text-sage-700">
                   <h3 className="font-semibold text-gray-900 text-sm">{p.nom}</h3>
-                  {!p.actif && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full shrink-0">Inactif</span>}
-                </div>
+                  {!p.actif ? (
+                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full shrink-0">Inactif</span>
+                  ) : Number(p.stock) <= 0 ? (
+                    <span className="text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full shrink-0">Rupture</span>
+                  ) : null}
+                </Link>
                 <p className="text-sm text-sage-700 font-medium">{Number(p.prix).toFixed(2)} € / {p.unite}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-xs text-gray-400">Stock : {p.stock} {p.unite}</p>

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { OrderEntity, OrderStatus } from '../orders/order.entity';
 import { ProductEntity } from '../products/product.entity';
+import { ReviewEntity } from '../reviews/review.entity';
 
 const CONFIRMED_STATUSES = [OrderStatus.ACCEPTEE, OrderStatus.LIVREE];
 
@@ -17,6 +18,8 @@ export class DashboardService {
     private readonly orderRepository: Repository<OrderEntity>,
     @InjectRepository(ProductEntity)
     private readonly productRepository: Repository<ProductEntity>,
+    @InjectRepository(ReviewEntity)
+    private readonly reviewRepository: Repository<ReviewEntity>,
   ) {}
 
   async getDashboardData(vendeurId: string) {
@@ -26,6 +29,16 @@ export class DashboardService {
       this.orderRepository.find({ where: { vendeurId }, order: { createdAt: 'DESC' } }),
       this.productRepository.find({ where: { vendeurId } }),
     ]);
+
+    const productIds = products.map((p) => p.id);
+    const reviews = productIds.length
+      ? await this.reviewRepository.find({ where: { productId: In(productIds) } })
+      : [];
+    const reviewsCount = reviews.length;
+    const companyRating = {
+      average: reviewsCount > 0 ? reviews.reduce((sum, r) => sum + r.note, 0) / reviewsCount : 0,
+      count: reviewsCount,
+    };
 
     const confirmed = orders.filter((o) => CONFIRMED_STATUSES.includes(o.statut));
     const totalRevenue = confirmed.reduce((sum, o) => sum + Number(o.total), 0);
@@ -84,6 +97,7 @@ export class DashboardService {
       pendingOrdersCount: pendingCount,
       activeProductsCount: products.filter((p) => p.actif).length,
       totalProductsCount: products.length,
+      companyRating,
       topProducts,
       lowStockProducts,
       recentOrders,

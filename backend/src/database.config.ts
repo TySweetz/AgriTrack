@@ -5,12 +5,13 @@ import { CompanySettingsEntity } from './company-settings/company-settings.entit
 import { UserEntity } from './users/user.entity';
 import { ProductEntity } from './products/product.entity';
 import { OrderEntity, OrderItemEntity } from './orders/order.entity';
+import { ReviewEntity } from './reviews/review.entity';
 
 export const getDatabaseConfig = (): TypeOrmModuleOptions => {
   return {
     type: 'postgres',
     url: process.env.DATABASE_URL || 'postgres://admin:admin@localhost:5432/asperges',
-    entities: [InvoiceEntity, DeliveryNoteEntity, CompanySettingsEntity, UserEntity, ProductEntity, OrderEntity, OrderItemEntity],
+    entities: [InvoiceEntity, DeliveryNoteEntity, CompanySettingsEntity, UserEntity, ProductEntity, OrderEntity, OrderItemEntity, ReviewEntity],
     synchronize: true, // V1 only - pas de migrations
     logging: process.env.NODE_ENV === 'development',
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,

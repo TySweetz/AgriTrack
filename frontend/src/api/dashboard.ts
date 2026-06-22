@@ -29,6 +29,7 @@ export interface DashboardData {
   pendingOrdersCount: number;
   activeProductsCount: number;
   totalProductsCount: number;
+  companyRating: { average: number; count: number };
   topProducts: TopProduct[];
   lowStockProducts: LowStockProduct[];
   recentOrders: RecentOrder[];

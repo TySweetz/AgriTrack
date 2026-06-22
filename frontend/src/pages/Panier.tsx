@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ordersApi } from '../api/orders';
+import { getPhotoUrl } from '../utils/media';
 
 export const Panier = () => {
   const { items, remove, updateQty, clear, total } = useCart();
@@ -60,8 +61,8 @@ export const Panier = () => {
       <div className="space-y-3 mb-6">
         {items.map(({ product, quantite }) => (
           <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
-            {product.photo ? (
-              <img src={product.photo} alt={product.nom} className="w-16 h-16 rounded-lg object-cover shrink-0" />
+            {getPhotoUrl(product.photo) ? (
+              <img src={getPhotoUrl(product.photo)!} alt={product.nom} className="w-16 h-16 rounded-lg object-cover shrink-0" />
             ) : (
               <div className="w-16 h-16 rounded-lg bg-sage-50 flex items-center justify-center text-2xl shrink-0">🌿</div>
             )}

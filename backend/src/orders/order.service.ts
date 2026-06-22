@@ -63,11 +63,9 @@ export class OrderService {
       });
       items.push(item);
 
-      product.stock = Number(product.stock) - itemDto.quantite;
-      if (product.stock <= 0) {
-        product.stock = 0;
-        product.actif = false;
-      }
+      // Le stock peut tomber a 0 (rupture) sans desactiver le produit : il reste
+      // visible (boutique vendeur + "Mes produits") et le vendeur peut le re-approvisionner.
+      product.stock = Math.max(0, Number(product.stock) - itemDto.quantite);
       await this.productRepo.save(product);
     }
 

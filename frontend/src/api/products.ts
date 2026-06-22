@@ -20,6 +20,7 @@ export const productsApi = {
   getAll: () => apiClient.get<Product[]>('/products'),
   getOne: (id: string) => apiClient.get<Product>(`/products/${id}`),
   getMine: () => apiClient.get<Product[]>('/products/vendeur/mes-produits'),
+  getByVendeur: (vendeurId: string) => apiClient.get<Product[]>(`/products/vendeur/${vendeurId}/public`),
   create: (data: Partial<Product>) => apiClient.post<Product>('/products', data),
   update: (id: string, data: Partial<Product>) => apiClient.patch<Product>(`/products/${id}`, data),
   remove: (id: string) => apiClient.delete(`/products/${id}`),

@@ -5,6 +5,7 @@ import { productsApi, Product } from '../api/products';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES, LABELS } from '../constants/product';
+import { getPhotoUrl } from '../utils/media';
 
 type SortOption = 'recent' | 'prix_asc' | 'prix_desc';
 type FilterKey = 'sort' | 'cat' | 'label' | 'price' | null;
@@ -14,8 +15,6 @@ const SORT_LABELS: Record<SortOption, string> = {
   prix_asc: 'Prix croissant',
   prix_desc: 'Prix décroissant',
 };
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const Marketplace = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -30,7 +29,6 @@ export const Marketplace = () => {
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
   const [sort, setSort] = useState<SortOption>('recent');
-  const [inStockOnly, setInStockOnly] = useState(false);
 
   const { add } = useCart();
   const { addToast } = useToast();
@@ -47,7 +45,7 @@ export const Marketplace = () => {
 
   const resetFilters = () => {
     setSearch(''); setSelectedCats([]); setSelectedLabels([]);
-    setPriceMin(''); setPriceMax(''); setSort('recent'); setInStockOnly(false);
+    setPriceMin(''); setPriceMax(''); setSort('recent');
   };
 
   const filtered = useMemo(() => {
@@ -64,22 +62,20 @@ export const Marketplace = () => {
     if (selectedLabels.length) list = list.filter((p) => selectedLabels.includes(p.label));
     if (priceMin) list = list.filter((p) => Number(p.prix) >= Number(priceMin));
     if (priceMax) list = list.filter((p) => Number(p.prix) <= Number(priceMax));
-    if (inStockOnly) list = list.filter((p) => Number(p.stock) > 0);
     if (sort === 'prix_asc') list.sort((a, b) => Number(a.prix) - Number(b.prix));
     if (sort === 'prix_desc') list.sort((a, b) => Number(b.prix) - Number(a.prix));
     return list;
-  }, [products, search, selectedCats, selectedLabels, priceMin, priceMax, sort, inStockOnly]);
+  }, [products, search, selectedCats, selectedLabels, priceMin, priceMax, sort]);
 
   const activeFilterCount = selectedCats.length + selectedLabels.length +
-    (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (inStockOnly ? 1 : 0);
+    (priceMin ? 1 : 0) + (priceMax ? 1 : 0);
 
   const handleAdd = (product: Product) => {
     add(product, qtyMap[product.id] ?? 1);
     addToast(`${product.nom} ajouté au panier 🛒`, 'success');
   };
 
-  const photoUrl = (p: Product) =>
-    p.photo ? (p.photo.startsWith('http') ? p.photo : `${API_URL}${p.photo}`) : null;
+  const photoUrl = (p: Product) => getPhotoUrl(p.photo);
 
   const toggleFilter = (key: Exclude<FilterKey, null>) =>
     setOpenFilter((prev) => (prev === key ? null : key));
@@ -217,14 +213,6 @@ export const Marketplace = () => {
             )}
           </div>
 
-          {/* En stock — toggle direct */}
-          <button
-            onClick={() => setInStockOnly((v) => !v)}
-            className={`relative z-20 ${pillClass(inStockOnly)}`}
-          >
-            En stock
-          </button>
-
           {activeFilterCount > 0 && (
             <button
               onClick={resetFilters}
@@ -285,18 +273,20 @@ export const Marketplace = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filtered.map((product) => (
                   <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
-                    {photoUrl(product) ? (
-                      <img src={photoUrl(product)!} alt={product.nom} className="h-40 w-full object-cover" />
-                    ) : (
-                      <div className="h-40 bg-sage-50 flex items-center justify-center text-4xl">
-                        {CATEGORIES.find((c) => c.value === product.categorie)?.emoji ?? '🌿'}
-                      </div>
-                    )}
+                    <Link to={`/produit/${product.id}`}>
+                      {photoUrl(product) ? (
+                        <img src={photoUrl(product)!} alt={product.nom} className="h-40 w-full object-cover" />
+                      ) : (
+                        <div className="h-40 bg-sage-50 flex items-center justify-center text-4xl">
+                          {CATEGORIES.find((c) => c.value === product.categorie)?.emoji ?? '🌿'}
+                        </div>
+                      )}
+                    </Link>
                     <div className="p-4 flex flex-col flex-1">
-                      <div className="flex items-start justify-between gap-2 mb-1">
+                      <Link to={`/produit/${product.id}`} className="flex items-start justify-between gap-2 mb-1 hover:text-sage-700">
                         <h3 className="font-semibold text-gray-900 text-sm">{product.nom}</h3>
                         <span className="text-xs bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full shrink-0">{product.categorie}</span>
-                      </div>
+                      </Link>
                       {product.label && product.label !== 'Conventionnel' && (
                         <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full w-fit mb-1">{product.label}</span>
                       )}

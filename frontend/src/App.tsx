@@ -32,6 +32,7 @@ import { Marketplace } from './pages/Marketplace';
 import { Panier } from './pages/Panier';
 import { MesCommandes } from './pages/MesCommandes';
 import { ProfilVendeur } from './pages/ProfilVendeur';
+import { ProductDetail } from './pages/ProductDetail';
 
 import './App.css';
 
@@ -57,6 +58,7 @@ function BuyerLayout() {
           <Routes>
             <Route path="/" element={<HomeRoute />} />
             <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/produit/:id" element={<ProductDetail />} />
             <Route path="/vendeur/:id" element={<ProfilVendeur />} />
             <Route path="/panier" element={<Panier />} />
             <Route path="/mes-commandes" element={<ProtectedRoute><MesCommandes /></ProtectedRoute>} />
@@ -84,6 +86,7 @@ function SellerLayout() {
             <Route path="/factures/:id" element={<ProtectedRoute requiredRole="agriculteur"><FactureDetail /></ProtectedRoute>} />
             <Route path="/parametres" element={<ProtectedRoute requiredRole="agriculteur"><ParametresEntreprise /></ProtectedRoute>} />
             <Route path="/mes-produits" element={<ProtectedRoute requiredRole="agriculteur"><MesProduits /></ProtectedRoute>} />
+            <Route path="/mes-produits/:id" element={<ProtectedRoute requiredRole="agriculteur"><ProductDetail /></ProtectedRoute>} />
             <Route path="/commandes-recues" element={<ProtectedRoute requiredRole="agriculteur"><CommandesRecues /></ProtectedRoute>} />
             <Route path="/profil" element={<ProtectedRoute><Profil /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -96,7 +99,17 @@ function SellerLayout() {
 }
 
 function AppLayout() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  // Important : tant que l'auth n'est pas rehydratee, ne pas choisir de layout —
+  // sinon le catch-all de BuyerLayout redirige vers "/" avant de connaitre le vrai role
+  // (ex: rafraichir /mes-produits en tant que vendeur retombait sur le dashboard).
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600" />
+      </div>
+    );
+  }
   return !user || user.role === 'acheteur' ? <BuyerLayout /> : <SellerLayout />;
 }
 

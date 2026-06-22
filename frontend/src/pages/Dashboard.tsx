@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, ClipboardList, Euro, Package } from 'lucide-react';
 import { dashboardApi, DashboardData } from '../api/dashboard';
 import { useAuth } from '../context/AuthContext';
+import { Stars } from '../components/Stars';
 
 const statutLabel: Record<string, { label: string; color: string }> = {
   en_attente: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700' },
@@ -57,6 +58,24 @@ export const Dashboard = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><Package size={14} /> Produits actifs</div>
           <p className="text-xl md:text-2xl font-bold text-gray-900">{data.activeProductsCount}<span className="text-sm text-gray-400">/{data.totalProductsCount}</span></p>
+        </div>
+      </div>
+
+      {/* Note de l'entreprise */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-sm text-gray-500 mb-1">Note de votre entreprise</p>
+          {data.companyRating.count > 0 ? (
+            <div className="flex items-center gap-2">
+              <Stars value={data.companyRating.average} size={20} />
+              <span className="text-lg font-bold text-gray-900">{data.companyRating.average.toFixed(1)}</span>
+              <span className="text-sm text-gray-400">
+                ({data.companyRating.count} avis tous produits confondus)
+              </span>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">Aucun avis reçu pour l'instant</p>
+          )}
         </div>
       </div>
 

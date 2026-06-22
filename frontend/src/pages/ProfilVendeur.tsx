@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Phone, MapPin, ShoppingCart } from 'lucide-react';
 import { authApi } from '../api/auth';
 import { productsApi, Product } from '../api/products';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES } from '../constants/product';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { getPhotoUrl } from '../utils/media';
 
 export const ProfilVendeur = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +23,7 @@ export const ProfilVendeur = () => {
     if (!id) return;
     Promise.all([
       authApi.getPublicVendeur(id),
-      productsApi.getAll().then((r) => ({ data: r.data.filter((p) => p.vendeurId === id) })),
+      productsApi.getByVendeur(id),
     ]).then(([vendeurRes, productsRes]) => {
       setVendeur(vendeurRes.data);
       setProducts(productsRes.data);
@@ -37,8 +36,7 @@ export const ProfilVendeur = () => {
     addToast(`${product.nom} ajouté au panier 🛒`, 'success');
   };
 
-  const photoUrl = (p: Product) =>
-    p.photo ? (p.photo.startsWith('http') ? p.photo : `${API_URL}${p.photo}`) : null;
+  const photoUrl = (p: Product) => getPhotoUrl(p.photo);
 
   if (loading) {
     return (
@@ -89,30 +87,32 @@ export const ProfilVendeur = () => {
 
       {/* Ses produits */}
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Produits disponibles ({products.length})
+        Produits ({products.length})
       </h2>
 
       {products.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <div className="text-4xl mb-2">🌿</div>
-          <p>Aucun produit disponible pour le moment.</p>
+          <p>Aucun produit publié pour le moment.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((product) => (
             <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
-              {photoUrl(product) ? (
-                <img src={photoUrl(product)!} alt={product.nom} className="h-40 w-full object-cover" />
-              ) : (
-                <div className="h-40 bg-sage-50 flex items-center justify-center text-4xl">
-                  {CATEGORIES.find((c) => c.value === product.categorie)?.emoji ?? '🌿'}
-                </div>
-              )}
+              <Link to={`/produit/${product.id}`}>
+                {photoUrl(product) ? (
+                  <img src={photoUrl(product)!} alt={product.nom} className="h-40 w-full object-cover" />
+                ) : (
+                  <div className="h-40 bg-sage-50 flex items-center justify-center text-4xl">
+                    {CATEGORIES.find((c) => c.value === product.categorie)?.emoji ?? '🌿'}
+                  </div>
+                )}
+              </Link>
               <div className="p-4 flex flex-col flex-1">
-                <div className="flex items-start justify-between gap-2 mb-1">
+                <Link to={`/produit/${product.id}`} className="flex items-start justify-between gap-2 mb-1 hover:text-sage-700">
                   <h3 className="font-semibold text-gray-900 text-sm">{product.nom}</h3>
                   <span className="text-xs bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full shrink-0">{product.categorie}</span>
-                </div>
+                </Link>
                 {product.label && product.label !== 'Conventionnel' && (
                   <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full w-fit mb-2">{product.label}</span>
                 )}

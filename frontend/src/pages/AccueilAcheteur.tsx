@@ -7,8 +7,7 @@ import { ordersApi, Order } from '../api/orders';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES } from '../constants/product';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { getPhotoUrl } from '../utils/media';
 
 const statutLabel: Record<string, { label: string; color: string }> = {
   en_attente: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700' },
@@ -41,8 +40,7 @@ export const AccueilAcheteur = () => {
     });
   }, [user?.id]);
 
-  const photoUrl = (p: Product) =>
-    p.photo ? (p.photo.startsWith('http') ? p.photo : `${API_URL}${p.photo}`) : null;
+  const photoUrl = (p: Product) => getPhotoUrl(p.photo);
 
   return (
     <div className="space-y-8">
@@ -108,15 +106,17 @@ export const AccueilAcheteur = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {products.map((product) => (
               <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                {photoUrl(product) ? (
-                  <img src={photoUrl(product)!} alt={product.nom} className="h-28 w-full object-cover" />
-                ) : (
-                  <div className="h-28 bg-sage-50 flex items-center justify-center text-3xl">
-                    {CATEGORIES.find((c) => c.value === product.categorie)?.emoji ?? '🌿'}
-                  </div>
-                )}
+                <Link to={`/produit/${product.id}`}>
+                  {photoUrl(product) ? (
+                    <img src={photoUrl(product)!} alt={product.nom} className="h-28 w-full object-cover" />
+                  ) : (
+                    <div className="h-28 bg-sage-50 flex items-center justify-center text-3xl">
+                      {CATEGORIES.find((c) => c.value === product.categorie)?.emoji ?? '🌿'}
+                    </div>
+                  )}
+                </Link>
                 <div className="p-3">
-                  <p className="text-sm font-medium text-gray-900 truncate">{product.nom}</p>
+                  <Link to={`/produit/${product.id}`} className="text-sm font-medium text-gray-900 truncate block hover:text-sage-700">{product.nom}</Link>
                   <p className="text-xs text-gray-400 truncate">🌱 {product.vendeur.entreprise || product.vendeur.nom}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-sm font-bold text-sage-700">

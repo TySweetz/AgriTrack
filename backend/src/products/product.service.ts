@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { ProductEntity } from './product.entity';
 import { CreateProductDto, UpdateProductDto } from './product.dto';
 
@@ -29,8 +29,16 @@ export class ProductService {
     private repo: Repository<ProductEntity>,
   ) {}
 
+  /**
+   * Marketplace generale : uniquement les produits publies ET disponibles.
+   * Les ruptures de stock restent visibles sur la boutique du vendeur (findByVendeurPublic)
+   * et dans "Mes produits", mais pas ici, pour ne pas polluer la liste generale.
+   */
   async findAll() {
-    const products = await this.repo.find({ where: { actif: true }, order: { createdAt: 'DESC' } });
+    const products = await this.repo.find({
+      where: { actif: true, stock: MoreThan(0) },
+      order: { createdAt: 'DESC' },
+    });
     return products.map(sanitizeProduct);
   }
 
@@ -39,6 +47,10 @@ export class ProductService {
     return products.map(sanitizeProduct);
   }
 
+  /**
+   * Boutique publique du vendeur : tous ses produits publies, y compris les ruptures
+   * de stock (affichees comme indisponibles cote acheteur, pas masquees).
+   */
   async findByVendeurPublic(vendeurId: string) {
     const products = await this.repo.find({ where: { vendeurId, actif: true }, order: { createdAt: 'DESC' } });
     return products.map(sanitizeProduct);
