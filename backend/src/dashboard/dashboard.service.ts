@@ -21,11 +21,9 @@ export class DashboardService {
 
   async getDashboardData(vendeurId: string) {
     const [orders, products] = await Promise.all([
-      this.orderRepository.find({
-        where: { vendeurId },
-        order: { createdAt: 'DESC' },
-        select: { acheteur: { id: true, nom: true, pseudo: true } },
-      }),
+      // Note: select sur une relation `eager` n'est pas applique par TypeORM — seuls des
+      // champs precis sont extraits de order.acheteur plus bas, jamais l'objet complet.
+      this.orderRepository.find({ where: { vendeurId }, order: { createdAt: 'DESC' } }),
       this.productRepository.find({ where: { vendeurId } }),
     ]);
 

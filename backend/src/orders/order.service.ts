@@ -7,11 +7,18 @@ import { CreateOrderDto, UpdateOrderStatusDto } from './order.dto';
 import { InvoiceService } from '../invoices/invoice.service';
 import { DeliveryNoteService } from '../delivery-notes/delivery-note.service';
 
-const PUBLIC_ACHETEUR_SELECT = {
-  id: true,
-  nom: true,
-  pseudo: true,
-} as const;
+/**
+ * TypeORM n'applique pas le filtrage `select` sur une relation chargee en `eager: true`
+ * (verifie : la requete generee selectionne quand meme toutes les colonnes, y compris
+ * le mot de passe). On assainit donc manuellement l'acheteur avant de renvoyer la commande.
+ */
+function sanitizeOrder<T extends OrderEntity>(order: T) {
+  if (!order.acheteur) return order;
+  return {
+    ...order,
+    acheteur: { id: order.acheteur.id, nom: order.acheteur.nom, pseudo: order.acheteur.pseudo },
+  };
+}
 
 @Injectable()
 export class OrderService {
@@ -76,33 +83,28 @@ export class OrderService {
     return this.orderRepo.save(order);
   }
 
-  findByAcheteur(acheteurId: string) {
-    return this.orderRepo.find({
-      where: { acheteurId },
-      order: { createdAt: 'DESC' },
-      select: { acheteur: PUBLIC_ACHETEUR_SELECT },
-    });
+  async findByAcheteur(acheteurId: string) {
+    const orders = await this.orderRepo.find({ where: { acheteurId }, order: { createdAt: 'DESC' } });
+    return orders.map(sanitizeOrder);
   }
 
-  findByVendeur(vendeurId: string) {
-    return this.orderRepo.find({
-      where: { vendeurId },
-      order: { createdAt: 'DESC' },
-      select: { acheteur: PUBLIC_ACHETEUR_SELECT },
-    });
+  async findByVendeur(vendeurId: string) {
+    const orders = await this.orderRepo.find({ where: { vendeurId }, order: { createdAt: 'DESC' } });
+    return orders.map(sanitizeOrder);
   }
 
-  async findOne(id: string) {
-    const order = await this.orderRepo.findOne({
-      where: { id },
-      select: { acheteur: PUBLIC_ACHETEUR_SELECT },
-    });
+  private async loadOne(id: string) {
+    const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) throw new NotFoundException('Commande introuvable');
     return order;
   }
 
+  async findOne(id: string) {
+    return sanitizeOrder(await this.loadOne(id));
+  }
+
   async updateStatus(id: string, dto: UpdateOrderStatusDto, vendeurId: string) {
-    const order = await this.findOne(id);
+    const order = await this.loadOne(id);
     if (order.vendeurId !== vendeurId) throw new ForbiddenException();
     order.statut = dto.statut as OrderStatus;
     const saved = await this.orderRepo.save(order);
@@ -118,7 +120,7 @@ export class OrderService {
       console.error('Erreur lors de la generation des documents de commande:', error);
     }
 
-    return saved;
+    return sanitizeOrder(saved);
   }
 
   async countPending(vendeurId: string) {

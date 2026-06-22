@@ -1,12 +1,19 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ShoppingCart, X } from 'lucide-react';
 import { productsApi, Product } from '../api/products';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { CATEGORIES, LABELS } from '../constants/product';
 
 type SortOption = 'recent' | 'prix_asc' | 'prix_desc';
+type FilterKey = 'sort' | 'cat' | 'label' | 'price' | null;
+
+const SORT_LABELS: Record<SortOption, string> = {
+  recent: 'Plus récents',
+  prix_asc: 'Prix croissant',
+  prix_desc: 'Prix décroissant',
+};
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -14,7 +21,7 @@ export const Marketplace = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [qtyMap, setQtyMap] = useState<Record<string, number>>({});
-  const [showFilters, setShowFilters] = useState(false);
+  const [openFilter, setOpenFilter] = useState<FilterKey>(null);
 
   // Filtres
   const [search, setSearch] = useState('');
@@ -74,147 +81,191 @@ export const Marketplace = () => {
   const photoUrl = (p: Product) =>
     p.photo ? (p.photo.startsWith('http') ? p.photo : `${API_URL}${p.photo}`) : null;
 
-  const FilterPanel = () => (
-    <div className="space-y-6">
-      {/* Tri */}
-      <div>
-        <p className="text-sm font-semibold text-gray-900 mb-2">Trier par</p>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortOption)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
-        >
-          <option value="recent">Plus récents</option>
-          <option value="prix_asc">Prix croissant</option>
-          <option value="prix_desc">Prix décroissant</option>
-        </select>
-      </div>
+  const toggleFilter = (key: Exclude<FilterKey, null>) =>
+    setOpenFilter((prev) => (prev === key ? null : key));
 
-      {/* Catégories */}
-      <div>
-        <p className="text-sm font-semibold text-gray-900 mb-2">Catégories</p>
-        <div className="space-y-1.5">
-          {CATEGORIES.map(({ value, emoji }) => (
-            <label key={value} className="flex items-center gap-2 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={selectedCats.includes(value)}
-                onChange={() => toggleCat(value)}
-                className="w-4 h-4 accent-sage-600"
-              />
-              <span className="text-sm text-gray-700 group-hover:text-sage-700">
-                {emoji} {value}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
+  const removeCat = (cat: string) => setSelectedCats((prev) => prev.filter((c) => c !== cat));
+  const removeLabel = (label: string) => setSelectedLabels((prev) => prev.filter((l) => l !== label));
 
-      {/* Labels */}
-      <div>
-        <p className="text-sm font-semibold text-gray-900 mb-2">Certification</p>
-        <div className="space-y-1.5">
-          {LABELS.map((label) => (
-            <label key={label} className="flex items-center gap-2 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={selectedLabels.includes(label)}
-                onChange={() => toggleLabel(label)}
-                className="w-4 h-4 accent-sage-600"
-              />
-              <span className="text-sm text-gray-700 group-hover:text-sage-700">{label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Prix */}
-      <div>
-        <p className="text-sm font-semibold text-gray-900 mb-2">Prix (€)</p>
-        <div className="flex gap-2 items-center">
-          <input
-            type="number"
-            placeholder="Min"
-            value={priceMin}
-            onChange={(e) => setPriceMin(e.target.value)}
-            min={0}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
-          />
-          <span className="text-gray-400 shrink-0">—</span>
-          <input
-            type="number"
-            placeholder="Max"
-            value={priceMax}
-            onChange={(e) => setPriceMax(e.target.value)}
-            min={0}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
-          />
-        </div>
-      </div>
-
-      {/* Disponibilité */}
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={inStockOnly}
-          onChange={(e) => setInStockOnly(e.target.checked)}
-          className="w-4 h-4 accent-sage-600"
-        />
-        <span className="text-sm text-gray-700">En stock uniquement</span>
-      </label>
-
-      {activeFilterCount > 0 && (
-        <button onClick={resetFilters} className="w-full border border-gray-300 text-gray-600 text-sm font-medium py-2 rounded-lg hover:bg-gray-50">
-          Réinitialiser les filtres
-        </button>
-      )}
-    </div>
-  );
+  const pillClass = (active: boolean) =>
+    `flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium border whitespace-nowrap transition-colors ${
+      active
+        ? 'bg-sage-600 border-sage-600 text-white'
+        : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
+    }`;
 
   return (
     <>
-      {/* Barre recherche + bouton filtre */}
-      <div className="flex gap-3 mb-6">
+      {/* Barre recherche */}
+      <div className="mb-3">
         <input
           type="text"
           placeholder="Rechercher un produit, producteur..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
         />
-        <button
-          onClick={() => setShowFilters(true)}
-          className="md:hidden relative flex items-center gap-2 border border-gray-300 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <SlidersHorizontal size={16} />
-          Filtres
-          {activeFilterCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-sage-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
       </div>
 
-      <div className="flex gap-6">
-        {/* Sidebar filtres — desktop */}
-        <aside className="hidden md:block w-56 shrink-0">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-24">
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-gray-900">Filtres</p>
-              {activeFilterCount > 0 && (
-                <span className="text-xs bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full font-medium">
-                  {activeFilterCount}
-                </span>
-              )}
-            </div>
-            <FilterPanel />
+      {/* Barre de filtres façon Leboncoin/Amazon */}
+      <div className="relative z-20 mb-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Trier */}
+          <div className="relative z-20">
+            <button onClick={() => toggleFilter('sort')} className={pillClass(sort !== 'recent')}>
+              {SORT_LABELS[sort]} <ChevronDown size={14} />
+            </button>
+            {openFilter === 'sort' && (
+              <div className="absolute left-0 top-full mt-2 z-30 w-56 bg-white border border-gray-200 rounded-xl shadow-lg p-2">
+                {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([value, label]) => (
+                  <button
+                    key={value}
+                    onClick={() => { setSort(value); setOpenFilter(null); }}
+                    className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-colors ${
+                      sort === value ? 'bg-sage-50 text-sage-700 font-medium' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        </aside>
 
-        {/* Grille produits */}
-        <div className="flex-1 min-w-0">
-          {loading ? (
+          {/* Catégories */}
+          <div className="relative z-20">
+            <button onClick={() => toggleFilter('cat')} className={pillClass(selectedCats.length > 0)}>
+              Catégorie {selectedCats.length > 0 && `(${selectedCats.length})`} <ChevronDown size={14} />
+            </button>
+            {openFilter === 'cat' && (
+              <div className="absolute left-0 top-full mt-2 z-30 w-64 max-w-[85vw] bg-white border border-gray-200 rounded-xl shadow-lg p-3 max-h-80 overflow-y-auto">
+                <div className="space-y-1">
+                  {CATEGORIES.map(({ value, emoji }) => (
+                    <label key={value} className="flex items-center gap-2 cursor-pointer group px-2 py-1.5 rounded-lg hover:bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={selectedCats.includes(value)}
+                        onChange={() => toggleCat(value)}
+                        className="w-4 h-4 accent-sage-600"
+                      />
+                      <span className="text-sm text-gray-700 group-hover:text-sage-700">{emoji} {value}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Certification */}
+          <div className="relative z-20">
+            <button onClick={() => toggleFilter('label')} className={pillClass(selectedLabels.length > 0)}>
+              Certification {selectedLabels.length > 0 && `(${selectedLabels.length})`} <ChevronDown size={14} />
+            </button>
+            {openFilter === 'label' && (
+              <div className="absolute left-0 top-full mt-2 z-30 w-56 max-w-[85vw] bg-white border border-gray-200 rounded-xl shadow-lg p-3 max-h-80 overflow-y-auto">
+                <div className="space-y-1">
+                  {LABELS.map((label) => (
+                    <label key={label} className="flex items-center gap-2 cursor-pointer group px-2 py-1.5 rounded-lg hover:bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={selectedLabels.includes(label)}
+                        onChange={() => toggleLabel(label)}
+                        className="w-4 h-4 accent-sage-600"
+                      />
+                      <span className="text-sm text-gray-700 group-hover:text-sage-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Prix */}
+          <div className="relative z-20">
+            <button onClick={() => toggleFilter('price')} className={pillClass(!!priceMin || !!priceMax)}>
+              Prix {(priceMin || priceMax) && `${priceMin || '0'}–${priceMax || '∞'} €`} <ChevronDown size={14} />
+            </button>
+            {openFilter === 'price' && (
+              <div className="absolute left-0 top-full mt-2 z-30 w-64 max-w-[85vw] bg-white border border-gray-200 rounded-xl shadow-lg p-4">
+                <p className="text-xs font-medium text-gray-500 mb-2">Fourchette de prix (€)</p>
+                <div className="flex gap-2 items-center mb-3">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={priceMin}
+                    onChange={(e) => setPriceMin(e.target.value)}
+                    min={0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
+                  />
+                  <span className="text-gray-400 shrink-0">—</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(e.target.value)}
+                    min={0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
+                  />
+                </div>
+                <button
+                  onClick={() => setOpenFilter(null)}
+                  className="w-full bg-sage-600 hover:bg-sage-700 text-white text-sm font-medium py-2 rounded-lg"
+                >
+                  Appliquer
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* En stock — toggle direct */}
+          <button
+            onClick={() => setInStockOnly((v) => !v)}
+            className={`relative z-20 ${pillClass(inStockOnly)}`}
+          >
+            En stock
+          </button>
+
+          {activeFilterCount > 0 && (
+            <button
+              onClick={resetFilters}
+              className="relative z-20 flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 hover:text-red-600 whitespace-nowrap"
+            >
+              <X size={14} /> Effacer
+            </button>
+          )}
+        </div>
+
+        {/* Tags des filtres actifs */}
+        {(selectedCats.length > 0 || selectedLabels.length > 0) && (
+          <div className="flex items-center gap-2 flex-wrap mt-2">
+            {selectedCats.map((cat) => (
+              <span key={cat} className="flex items-center gap-1 bg-sage-50 text-sage-700 text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full">
+                {cat}
+                <button onClick={() => removeCat(cat)} className="hover:bg-sage-100 rounded-full p-0.5">
+                  <X size={11} />
+                </button>
+              </span>
+            ))}
+            {selectedLabels.map((label) => (
+              <span key={label} className="flex items-center gap-1 bg-sage-50 text-sage-700 text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full">
+                {label}
+                <button onClick={() => removeLabel(label)} className="hover:bg-sage-100 rounded-full p-0.5">
+                  <X size={11} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Overlay pour fermer le dropdown ouvert */}
+        {openFilter && (
+          <div className="fixed inset-0 z-10" onClick={() => setOpenFilter(null)} />
+        )}
+      </div>
+
+      {/* Grille produits */}
+      <div>
+        {loading ? (
             <div className="flex justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600" />
             </div>
@@ -295,29 +346,6 @@ export const Marketplace = () => {
             </>
           )}
         </div>
-      </div>
-
-      {/* Drawer filtres mobile */}
-      {showFilters && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="flex-1 bg-black/40" onClick={() => setShowFilters(false)} />
-          <div className="w-80 bg-white h-full overflow-y-auto p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-5">
-              <p className="font-semibold text-gray-900">Filtres</p>
-              <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
-            </div>
-            <FilterPanel />
-            <button
-              onClick={() => setShowFilters(false)}
-              className="mt-6 w-full bg-sage-600 text-white font-medium py-3 rounded-lg hover:bg-sage-700"
-            >
-              Voir les résultats ({filtered.length})
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 };

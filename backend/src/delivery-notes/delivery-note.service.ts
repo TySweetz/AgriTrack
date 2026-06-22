@@ -54,10 +54,10 @@ export class DeliveryNoteService {
     const existing = await this.deliveryNoteRepository.findOne({ where: { orderId } });
     if (existing) return existing;
 
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId },
-      select: { acheteur: { id: true, nom: true, pseudo: true } },
-    });
+    // Note: select sur une relation `eager` n'est pas applique par TypeORM, donc on ne
+    // touche pas a order.acheteur ici — seuls des champs precis en sont extraits plus bas,
+    // jamais l'objet complet (qui contiendrait le mot de passe).
+    const order = await this.orderRepository.findOne({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Commande introuvable');
     if (order.vendeurId !== vendeurId) throw new ForbiddenException();
 

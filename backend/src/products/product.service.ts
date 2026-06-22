@@ -4,12 +4,23 @@ import { Repository } from 'typeorm';
 import { ProductEntity } from './product.entity';
 import { CreateProductDto, UpdateProductDto } from './product.dto';
 
-const PUBLIC_VENDEUR_SELECT = {
-  id: true,
-  nom: true,
-  entreprise: true,
-  telephone: true,
-} as const;
+/**
+ * TypeORM n'applique pas le filtrage `select` sur une relation chargee en `eager: true`
+ * (verifie : la requete generee selectionne quand meme toutes les colonnes, y compris
+ * le mot de passe). On assainit donc manuellement le vendeur avant de renvoyer le produit.
+ */
+function sanitizeProduct<T extends ProductEntity>(product: T) {
+  if (!product.vendeur) return product;
+  return {
+    ...product,
+    vendeur: {
+      id: product.vendeur.id,
+      nom: product.vendeur.nom,
+      entreprise: product.vendeur.entreprise,
+      telephone: product.vendeur.telephone,
+    },
+  };
+}
 
 @Injectable()
 export class ProductService {
@@ -18,34 +29,29 @@ export class ProductService {
     private repo: Repository<ProductEntity>,
   ) {}
 
-  findAll() {
-    return this.repo.find({
-      where: { actif: true },
-      order: { createdAt: 'DESC' },
-      select: { vendeur: PUBLIC_VENDEUR_SELECT },
-    });
+  async findAll() {
+    const products = await this.repo.find({ where: { actif: true }, order: { createdAt: 'DESC' } });
+    return products.map(sanitizeProduct);
   }
 
-  findByVendeur(vendeurId: string) {
-    return this.repo.find({
-      where: { vendeurId },
-      order: { createdAt: 'DESC' },
-      select: { vendeur: PUBLIC_VENDEUR_SELECT },
-    });
+  async findByVendeur(vendeurId: string) {
+    const products = await this.repo.find({ where: { vendeurId }, order: { createdAt: 'DESC' } });
+    return products.map(sanitizeProduct);
   }
 
-  findByVendeurPublic(vendeurId: string) {
-    return this.repo.find({
-      where: { vendeurId, actif: true },
-      order: { createdAt: 'DESC' },
-      select: { vendeur: PUBLIC_VENDEUR_SELECT },
-    });
+  async findByVendeurPublic(vendeurId: string) {
+    const products = await this.repo.find({ where: { vendeurId, actif: true }, order: { createdAt: 'DESC' } });
+    return products.map(sanitizeProduct);
+  }
+
+  private async loadOne(id: string) {
+    const product = await this.repo.findOne({ where: { id } });
+    if (!product) throw new NotFoundException('Produit introuvable');
+    return product;
   }
 
   async findOne(id: string) {
-    const p = await this.repo.findOne({ where: { id }, select: { vendeur: PUBLIC_VENDEUR_SELECT } });
-    if (!p) throw new NotFoundException('Produit introuvable');
-    return p;
+    return sanitizeProduct(await this.loadOne(id));
   }
 
   async create(dto: CreateProductDto, vendeurId: string) {
@@ -54,14 +60,14 @@ export class ProductService {
   }
 
   async update(id: string, dto: UpdateProductDto, vendeurId: string) {
-    const product = await this.findOne(id);
+    const product = await this.loadOne(id);
     if (product.vendeurId !== vendeurId) throw new ForbiddenException();
     Object.assign(product, dto);
-    return this.repo.save(product);
+    return sanitizeProduct(await this.repo.save(product));
   }
 
   async remove(id: string, vendeurId: string) {
-    const product = await this.findOne(id);
+    const product = await this.loadOne(id);
     if (product.vendeurId !== vendeurId) throw new ForbiddenException();
     await this.repo.remove(product);
     return { success: true };
