@@ -1,37 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Like, Repository } from 'typeorm';
-import { InvoiceEntity } from './invoice.entity';
-import { DeliveryEntity } from '../deliveries/delivery.entity';
-import { GenerateInvoiceDto } from './invoice.dto';
+import { Like, Repository } from 'typeorm';
+import { InvoiceEntity, InvoiceLine } from './invoice.entity';
+import { OrderEntity } from '../orders/order.entity';
+import { UserEntity } from '../users/user.entity';
 import { CompanySettingsService } from '../company-settings/company-settings.service';
 
 /**
- * Service pour la gestion des factures
+ * Service pour la gestion des factures, generees a partir des commandes
  */
 @Injectable()
 export class InvoiceService {
   constructor(
     @InjectRepository(InvoiceEntity)
     private readonly invoiceRepository: Repository<InvoiceEntity>,
-    @InjectRepository(DeliveryEntity)
-    private readonly deliveryRepository: Repository<DeliveryEntity>,
+    @InjectRepository(OrderEntity)
+    private readonly orderRepository: Repository<OrderEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private readonly companySettingsService: CompanySettingsService,
   ) {}
 
-  async findAll() {
+  findMine(vendeurId: string) {
     return this.invoiceRepository.find({
+      where: { vendeurId },
       order: { created_at: 'DESC' },
     });
   }
 
-  async findOne(id: string) {
-    return this.invoiceRepository.findOne({
-      where: { id },
-    });
+  async findOne(id: string, vendeurId: string) {
+    const invoice = await this.invoiceRepository.findOne({ where: { id, vendeurId } });
+    if (!invoice) throw new NotFoundException('Facture introuvable');
+    return invoice;
   }
 
-  async generateInvoiceNumber(date: Date) {
+  private async generateInvoiceNumber(date: Date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const prefix = `FAC-${year}${month}`;
@@ -43,57 +46,63 @@ export class InvoiceService {
     return `${prefix}-${String(count + 1).padStart(3, '0')}`;
   }
 
-  async generateMonthlyInvoice(dto: GenerateInvoiceDto) {
-    const periodStart = new Date(dto.period_start);
-    periodStart.setHours(0, 0, 0, 0);
+  /**
+   * Genere la facture d'une commande (idempotent : renvoie la facture existante si deja generee)
+   */
+  async generateForOrder(orderId: string, vendeurId: string) {
+    const existing = await this.invoiceRepository.findOne({ where: { orderId } });
+    if (existing) return existing;
 
-    const periodEnd = new Date(dto.period_end);
-    periodEnd.setHours(23, 59, 59, 999);
-
-    const deliveries = await this.deliveryRepository.find({
-      where: {
-        client_id: dto.client_id,
-        date: Between(periodStart, periodEnd),
-      },
-      order: { date: 'ASC' },
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      select: { acheteur: { id: true, nom: true, pseudo: true, adresse: true } },
     });
+    if (!order) throw new NotFoundException('Commande introuvable');
+    if (order.vendeurId !== vendeurId) throw new ForbiddenException();
 
-    const totalKg = deliveries.reduce((sum, delivery) => sum + Number(delivery.quantite_kg || 0), 0);
-    const montantHt = totalKg * Number(dto.prix_unitaire_kg || 0);
-    const montantTva = (montantHt * Number(dto.taux_tva || 0)) / 100;
-    const montantTtc = montantHt + montantTva;
+    const vendeur = await this.userRepository.findOne({ where: { id: vendeurId } });
+    const settings = await this.companySettingsService.getOrCreate(vendeurId);
+
+    const montantTtc = Number(order.total);
+    const tauxTva = settings.assujetti_tva ? Number(settings.taux_tva) : 0;
+    const montantHt = settings.assujetti_tva ? montantTtc / (1 + tauxTva / 100) : montantTtc;
+    const montantTva = montantTtc - montantHt;
+
+    const items: InvoiceLine[] = order.items.map((item) => ({
+      nomProduit: item.nomProduit,
+      prixUnitaire: Number(item.prixUnitaire),
+      unite: item.unite,
+      quantite: Number(item.quantite),
+      sousTotal: Number(item.sousTotal),
+    }));
 
     const invoice = this.invoiceRepository.create({
-      numero_facture: await this.generateInvoiceNumber(periodEnd),
-      status: 'DRAFT',
-      client_id: dto.client_id,
-      period_start: periodStart,
-      period_end: periodEnd,
-      total_kg: totalKg,
-      prix_unitaire_kg: dto.prix_unitaire_kg,
-      montant_ht: montantHt,
-      taux_tva: dto.taux_tva,
-      montant_tva: montantTva,
+      numero_facture: await this.generateInvoiceNumber(new Date()),
+      orderId: order.id,
+      vendeurId,
+      vendeurNom: vendeur?.entreprise || vendeur?.nom || 'Vendeur',
+      vendeurSiret: settings.siret || undefined,
+      acheteurNom: order.acheteur?.pseudo || order.acheteur?.nom || 'Acheteur',
+      acheteurAdresse: order.adresseLivraison || order.acheteur?.adresse,
+      items,
+      assujetti_tva: settings.assujetti_tva,
+      taux_tva: tauxTva,
+      montant_ht: Number(montantHt.toFixed(2)),
+      montant_tva: Number(montantTva.toFixed(2)),
       montant_ttc: montantTtc,
     });
 
     return this.invoiceRepository.save(invoice);
   }
 
-  async getDocument(id: string) {
-    const invoice = await this.findOne(id);
-
-    if (!invoice) {
-      return null;
-    }
-
-    const settings = await this.companySettingsService.getSettings();
+  async getDocument(id: string, vendeurId: string) {
+    const invoice = await this.findOne(id, vendeurId);
+    const settings = await this.companySettingsService.getSettings(vendeurId);
 
     return {
       invoice,
-      documentTitle: 'Facture',
       printableReference: invoice.numero_facture,
-      printablePeriod: `${new Date(invoice.period_start).toLocaleDateString('fr-FR')} - ${new Date(invoice.period_end).toLocaleDateString('fr-FR')}`,
+      printableDate: new Date(invoice.created_at).toLocaleDateString('fr-FR'),
       signature: {
         enabled: settings.signature_enabled_invoice,
         url: settings.signature_url,

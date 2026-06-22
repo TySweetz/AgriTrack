@@ -5,7 +5,7 @@ import { companySettingsApi, CompanySettings } from '../api/companySettings';
 import { useAuth } from '../context/AuthContext';
 
 /**
- * Page de gestion de la signature entreprise
+ * Page de gestion des parametres entreprise : facturation (SIRET, TVA) et signature
  */
 export const ParametresEntreprise = () => {
   const { user } = useAuth();
@@ -14,7 +14,9 @@ export const ParametresEntreprise = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [companyName, setCompanyName] = useState('');
+  const [siret, setSiret] = useState('');
+  const [assujettiTva, setAssujettiTva] = useState(false);
+  const [tauxTva, setTauxTva] = useState('20');
   const [showOnDelivery, setShowOnDelivery] = useState(true);
   const [showOnInvoice, setShowOnInvoice] = useState(true);
 
@@ -27,7 +29,9 @@ export const ParametresEntreprise = () => {
       setLoading(true);
       const data = await companySettingsApi.get();
       setSettings(data);
-      setCompanyName(data.company_name || '');
+      setSiret(data.siret || '');
+      setAssujettiTva(data.assujetti_tva);
+      setTauxTva(String(data.taux_tva));
       setShowOnDelivery(data.signature_enabled_delivery);
       setShowOnInvoice(data.signature_enabled_invoice);
       setError(null);
@@ -42,7 +46,9 @@ export const ParametresEntreprise = () => {
     try {
       setSaving(true);
       const updated = await companySettingsApi.update({
-        company_name: companyName || null,
+        siret: siret || undefined,
+        assujetti_tva: assujettiTva,
+        taux_tva: Number(tauxTva) || 0,
         signature_enabled_delivery: showOnDelivery,
         signature_enabled_invoice: showOnInvoice,
       });
@@ -97,7 +103,7 @@ export const ParametresEntreprise = () => {
     <div className="p-4 max-w-5xl mx-auto pb-24 md:pb-0">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Parametres entreprise</h1>
-        <p className="text-gray-600">Signature affichee sur les bons de livraison et les factures</p>
+        <p className="text-gray-600">Informations de facturation et signature affichee sur vos documents</p>
       </div>
 
       {error && (
@@ -112,21 +118,46 @@ export const ParametresEntreprise = () => {
       )}
 
       <Card className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Informations</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Facturation</h2>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nom de l'entreprise</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              SIRET <span className="text-gray-400">(optionnel, affiché sur vos factures)</span>
+            </label>
             <input
               type="text"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Ex: AgriTrack SAS"
+              value={siret}
+              onChange={(e) => setSiret(e.target.value)}
+              placeholder="123 456 789 00012"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
             />
           </div>
 
           <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={assujettiTva} onChange={(e) => setAssujettiTva(e.target.checked)} />
+            Mon activité est assujettie à la TVA
+          </label>
+
+          {assujettiTva ? (
+            <div className="max-w-xs">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Taux de TVA (%)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={tauxTva}
+                onChange={(e) => setTauxTva(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+              />
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500 italic">
+              Vos factures afficheront la mention "TVA non applicable, article 293 B du CGI".
+            </p>
+          )}
+
+          <label className="flex items-center gap-2 text-sm text-gray-700 pt-2 border-t border-gray-100">
             <input type="checkbox" checked={showOnDelivery} onChange={(e) => setShowOnDelivery(e.target.checked)} />
             Afficher la signature sur les bons de livraison
           </label>

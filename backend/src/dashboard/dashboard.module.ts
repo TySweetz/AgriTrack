@@ -1,20 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { InventoryEntity } from '../inventory/inventory.entity';
+import { OrderEntity, OrderItemEntity } from '../orders/order.entity';
+import { ProductEntity } from '../products/product.entity';
 import { DashboardService } from './dashboard.service';
 import { DashboardController } from './dashboard.controller';
-import { InventoryModule } from '../inventory/inventory.module';
-import { DeliveryModule } from '../deliveries/delivery.module';
 
 /**
- * Module Dashboard - Agrégats et statistiques
+ * Module Dashboard - Agrégats et statistiques de vente du vendeur connecte
  */
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([InventoryEntity]),
-    InventoryModule,
-    DeliveryModule,
-  ],
+  imports: [TypeOrmModule.forFeature([OrderEntity, OrderItemEntity, ProductEntity])],
   providers: [DashboardService],
   controllers: [DashboardController],
 })

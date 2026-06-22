@@ -7,6 +7,11 @@ export class UpdateProfileDto {
   nom?: string;
 
   @IsString()
+  @MinLength(1)
+  @IsOptional()
+  entreprise?: string;
+
+  @IsString()
   @IsOptional()
   telephone?: string;
 

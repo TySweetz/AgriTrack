@@ -33,7 +33,12 @@ export class AuthService {
     if (existing) throw new ConflictException('Cet email est déjà utilisé');
 
     const hashed = await bcrypt.hash(dto.password, 10);
-    const user = this.userRepo.create({ ...dto, password: hashed });
+    const isAcheteur = dto.role !== UserRole.AGRICULTEUR;
+    const user = this.userRepo.create({
+      ...dto,
+      password: hashed,
+      pseudo: isAcheteur ? dto.nom : undefined,
+    });
     await this.userRepo.save(user);
 
     return this.buildResponse(user);
@@ -85,6 +90,12 @@ export class AuthService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable');
 
+    if (dto.role === UserRole.AGRICULTEUR && !user.telephone) {
+      throw new BadRequestException(
+        "Le nom de l'entreprise et le téléphone sont requis pour passer en mode agriculteur",
+      );
+    }
+
     user.role = dto.role as UserRole;
     await this.userRepo.save(user);
 
@@ -96,6 +107,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('Utilisateur introuvable');
 
     if (dto.nom !== undefined) user.nom = dto.nom;
+    if (dto.entreprise !== undefined) user.entreprise = dto.entreprise;
     if (dto.telephone !== undefined) user.telephone = dto.telephone;
     if (dto.adresse !== undefined) user.adresse = dto.adresse;
     if (dto.pseudo !== undefined) user.pseudo = dto.pseudo;
@@ -112,6 +124,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       nom: user.nom,
+      entreprise: user.entreprise,
       role: user.role,
       telephone: user.telephone,
       adresse: user.adresse,
@@ -124,7 +137,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('Vendeur introuvable');
     return {
       id: user.id,
-      nom: user.nom,
+      nom: user.entreprise || user.nom,
       telephone: user.telephone,
       adresse: user.adresse,
     };
@@ -138,6 +151,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         nom: user.nom,
+        entreprise: user.entreprise,
         role: user.role,
         telephone: user.telephone,
         adresse: user.adresse,

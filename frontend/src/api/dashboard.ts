@@ -1,34 +1,43 @@
 import apiClient from './client';
-import { Delivery } from './deliveries';
 
-export interface DashboardData {
-  total_stock_kg: number;
-  total_vendu_kg: number;
-  moyenne_kg_botte: number;
-  livraisons_recentes: Delivery[];
-  nombre_livraisons: number;
+export interface TopProduct {
+  nom: string;
+  unite: string;
+  quantite: number;
+  revenue: number;
 }
 
-/**
- * Service pour récupérer les données du dashboard
- */
+export interface LowStockProduct {
+  id: string;
+  nom: string;
+  stock: number;
+  unite: string;
+}
+
+export interface RecentOrder {
+  id: string;
+  acheteurNom: string;
+  total: number;
+  statut: 'en_attente' | 'acceptee' | 'refusee' | 'livree';
+  createdAt: string;
+  itemsCount: number;
+}
+
+export interface DashboardData {
+  totalRevenue: number;
+  ordersConfirmedCount: number;
+  pendingOrdersCount: number;
+  activeProductsCount: number;
+  totalProductsCount: number;
+  topProducts: TopProduct[];
+  lowStockProducts: LowStockProduct[];
+  recentOrders: RecentOrder[];
+  salesByDay: { date: string; total: number }[];
+}
+
 export const dashboardApi = {
-  // Récupère les données du dashboard
   getAll: async (): Promise<DashboardData> => {
     const response = await apiClient.get('/dashboard');
-    const data = response.data;
-    return {
-      ...data,
-      total_stock_kg: typeof data.total_stock_kg === 'string' ? parseFloat(data.total_stock_kg) : data.total_stock_kg,
-      total_vendu_kg: typeof data.total_vendu_kg === 'string' ? parseFloat(data.total_vendu_kg) : data.total_vendu_kg,
-      moyenne_kg_botte: typeof data.moyenne_kg_botte === 'string' ? parseFloat(data.moyenne_kg_botte) : data.moyenne_kg_botte,
-      livraisons_recentes: data.livraisons_recentes.map((delivery: any) => ({
-        ...delivery,
-        quantite_kg:
-          typeof delivery.quantite_kg === 'string'
-            ? parseFloat(delivery.quantite_kg)
-            : delivery.quantite_kg,
-      })),
-    };
+    return response.data;
   },
 };

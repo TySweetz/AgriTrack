@@ -2,7 +2,9 @@ import apiClient from './client';
 
 export interface CompanySettings {
   id: string;
-  company_name: string | null;
+  siret: string | null;
+  assujetti_tva: boolean;
+  taux_tva: number;
   signature_enabled_delivery: boolean;
   signature_enabled_invoice: boolean;
   signature_url: string | null;
@@ -17,7 +19,7 @@ export const companySettingsApi = {
     return response.data;
   },
 
-  update: async (data: Partial<Pick<CompanySettings, 'company_name' | 'signature_enabled_delivery' | 'signature_enabled_invoice'>>): Promise<CompanySettings> => {
+  update: async (data: Partial<Pick<CompanySettings, 'siret' | 'assujetti_tva' | 'taux_tva' | 'signature_enabled_delivery' | 'signature_enabled_invoice'>>): Promise<CompanySettings> => {
     const response = await apiClient.patch('/company-settings', data);
     return response.data;
   },

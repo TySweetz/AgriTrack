@@ -32,6 +32,10 @@ export const Panier = () => {
   }
 
   const handleOrder = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     setLoading(true);
     try {
       await ordersApi.create({
@@ -93,35 +97,43 @@ export const Panier = () => {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
-        <h2 className="font-semibold text-gray-900 mb-3">Finaliser la commande</h2>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Adresse de livraison <span className="text-gray-400">(optionnel)</span>
-            </label>
-            <input
-              type="text"
-              value={adresse}
-              onChange={(e) => setAdresse(e.target.value)}
-              placeholder="12 rue des Champs, 63000 Clermont-Ferrand"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Message au vendeur <span className="text-gray-400">(optionnel)</span>
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={2}
-              placeholder="Instructions particulières..."
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400 resize-none"
-            />
+      {user && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
+          <h2 className="font-semibold text-gray-900 mb-3">Finaliser la commande</h2>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Adresse de livraison <span className="text-gray-400">(optionnel)</span>
+              </label>
+              <input
+                type="text"
+                value={adresse}
+                onChange={(e) => setAdresse(e.target.value)}
+                placeholder="12 rue des Champs, 63000 Clermont-Ferrand"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Message au vendeur <span className="text-gray-400">(optionnel)</span>
+              </label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={2}
+                placeholder="Instructions particulières..."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400 resize-none"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {!user && (
+        <div className="bg-sage-50 border border-sage-200 text-sage-700 rounded-xl p-4 mb-4 text-sm">
+          Connectez-vous ou créez un compte pour passer votre commande.
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex justify-between items-center mb-4">
@@ -133,7 +145,7 @@ export const Panier = () => {
           disabled={loading}
           className="w-full bg-sage-600 hover:bg-sage-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50"
         >
-          {loading ? 'Envoi...' : 'Passer la commande'}
+          {loading ? 'Envoi...' : user ? 'Passer la commande' : 'Se connecter pour commander'}
         </button>
       </div>
     </div>

@@ -1,43 +1,32 @@
-import { Body, Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
-import { GenerateInvoiceDto } from './invoice.dto';
+import { Controller, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { InvoiceService } from './invoice.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 /**
- * Contrôleur pour les factures
+ * Contrôleur pour les factures (scope: vendeur connecte)
  */
 @Controller('invoices')
+@UseGuards(JwtAuthGuard)
 export class InvoiceController {
   constructor(private readonly invoiceService: InvoiceService) {}
 
   @Get()
-  async findAll() {
-    return this.invoiceService.findAll();
+  findMine(@Request() req: any) {
+    return this.invoiceService.findMine(req.user.id);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const invoice = await this.invoiceService.findOne(id);
-
-    if (!invoice) {
-      throw new NotFoundException('Facture introuvable');
-    }
-
-    return invoice;
+  findOne(@Param('id') id: string, @Request() req: any) {
+    return this.invoiceService.findOne(id, req.user.id);
   }
 
   @Get(':id/document')
-  async getDocument(@Param('id') id: string) {
-    const document = await this.invoiceService.getDocument(id);
-
-    if (!document) {
-      throw new NotFoundException('Facture introuvable');
-    }
-
-    return document;
+  getDocument(@Param('id') id: string, @Request() req: any) {
+    return this.invoiceService.getDocument(id, req.user.id);
   }
 
-  @Post('generate-monthly')
-  async generateMonthlyInvoice(@Body() dto: GenerateInvoiceDto) {
-    return this.invoiceService.generateMonthlyInvoice(dto);
+  @Post('generate/:orderId')
+  generate(@Param('orderId') orderId: string, @Request() req: any) {
+    return this.invoiceService.generateForOrder(orderId, req.user.id);
   }
 }

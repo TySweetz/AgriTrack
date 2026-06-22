@@ -1,18 +1,17 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Request, UseGuards } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 /**
- * Contrôleur pour le dashboard
+ * Contrôleur pour le dashboard du vendeur connecte
  */
 @Controller('dashboard')
+@UseGuards(JwtAuthGuard)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  /**
-   * GET /dashboard - Récupère les données du dashboard
-   */
   @Get()
-  async getDashboard() {
-    return this.dashboardService.getDashboardData();
+  async getDashboard(@Request() req: any) {
+    return this.dashboardService.getDashboardData(req.user.id);
   }
 }

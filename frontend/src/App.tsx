@@ -18,13 +18,10 @@ import { Profil } from './pages/Profil';
 
 // Pages vendeur
 import { Dashboard } from './pages/Dashboard';
-import { Inventaire } from './pages/Inventaire';
 import { Livraisons } from './pages/Livraisons';
-import { Clients } from './pages/Clients';
 import { BonLivraison } from './pages/BonLivraison';
 import { Factures } from './pages/Factures';
 import { FactureDetail } from './pages/FactureDetail';
-import { StockSoir } from './pages/StockSoir';
 import { ParametresEntreprise } from './pages/ParametresEntreprise';
 import { MesProduits } from './pages/MesProduits';
 import { CommandesRecues } from './pages/CommandesRecues';
@@ -38,6 +35,19 @@ import { ProfilVendeur } from './pages/ProfilVendeur';
 
 import './App.css';
 
+function HomeRoute() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600" />
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/marketplace" replace />;
+  return <AccueilAcheteur />;
+}
+
 function BuyerLayout() {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
@@ -45,11 +55,11 @@ function BuyerLayout() {
       <div className="flex flex-col flex-1 pb-20 md:pb-0 min-w-0">
         <main className="flex-1 p-4 md:p-6">
           <Routes>
-            <Route path="/" element={<ProtectedRoute><AccueilAcheteur /></ProtectedRoute>} />
-            <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-            <Route path="/panier" element={<ProtectedRoute><Panier /></ProtectedRoute>} />
+            <Route path="/" element={<HomeRoute />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/vendeur/:id" element={<ProfilVendeur />} />
+            <Route path="/panier" element={<Panier />} />
             <Route path="/mes-commandes" element={<ProtectedRoute><MesCommandes /></ProtectedRoute>} />
-            <Route path="/vendeur/:id" element={<ProtectedRoute><ProfilVendeur /></ProtectedRoute>} />
             <Route path="/profil" element={<ProtectedRoute><Profil /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -68,11 +78,8 @@ function SellerLayout() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<ProtectedRoute requiredRole="agriculteur"><Dashboard /></ProtectedRoute>} />
-            <Route path="/inventaire" element={<ProtectedRoute requiredRole="agriculteur"><Inventaire /></ProtectedRoute>} />
             <Route path="/livraisons" element={<ProtectedRoute requiredRole="agriculteur"><Livraisons /></ProtectedRoute>} />
             <Route path="/livraisons/:id" element={<ProtectedRoute requiredRole="agriculteur"><BonLivraison /></ProtectedRoute>} />
-            <Route path="/clients" element={<ProtectedRoute requiredRole="agriculteur"><Clients /></ProtectedRoute>} />
-            <Route path="/stock-soir" element={<ProtectedRoute requiredRole="agriculteur"><StockSoir /></ProtectedRoute>} />
             <Route path="/factures" element={<ProtectedRoute requiredRole="agriculteur"><Factures /></ProtectedRoute>} />
             <Route path="/factures/:id" element={<ProtectedRoute requiredRole="agriculteur"><FactureDetail /></ProtectedRoute>} />
             <Route path="/parametres" element={<ProtectedRoute requiredRole="agriculteur"><ParametresEntreprise /></ProtectedRoute>} />
@@ -90,7 +97,7 @@ function SellerLayout() {
 
 function AppLayout() {
   const { user } = useAuth();
-  return user?.role === 'acheteur' ? <BuyerLayout /> : <SellerLayout />;
+  return !user || user.role === 'acheteur' ? <BuyerLayout /> : <SellerLayout />;
 }
 
 function CartProviderWithAuth({ children }: { children: React.ReactNode }) {

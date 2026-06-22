@@ -4,6 +4,14 @@ import { Repository } from 'typeorm';
 import { OrderEntity, OrderItemEntity, OrderStatus } from './order.entity';
 import { ProductEntity } from '../products/product.entity';
 import { CreateOrderDto, UpdateOrderStatusDto } from './order.dto';
+import { InvoiceService } from '../invoices/invoice.service';
+import { DeliveryNoteService } from '../delivery-notes/delivery-note.service';
+
+const PUBLIC_ACHETEUR_SELECT = {
+  id: true,
+  nom: true,
+  pseudo: true,
+} as const;
 
 @Injectable()
 export class OrderService {
@@ -14,6 +22,8 @@ export class OrderService {
     private itemRepo: Repository<OrderItemEntity>,
     @InjectRepository(ProductEntity)
     private productRepo: Repository<ProductEntity>,
+    private invoiceService: InvoiceService,
+    private deliveryNoteService: DeliveryNoteService,
   ) {}
 
   async create(dto: CreateOrderDto, acheteurId: string) {
@@ -70,6 +80,7 @@ export class OrderService {
     return this.orderRepo.find({
       where: { acheteurId },
       order: { createdAt: 'DESC' },
+      select: { acheteur: PUBLIC_ACHETEUR_SELECT },
     });
   }
 
@@ -77,11 +88,15 @@ export class OrderService {
     return this.orderRepo.find({
       where: { vendeurId },
       order: { createdAt: 'DESC' },
+      select: { acheteur: PUBLIC_ACHETEUR_SELECT },
     });
   }
 
   async findOne(id: string) {
-    const order = await this.orderRepo.findOne({ where: { id } });
+    const order = await this.orderRepo.findOne({
+      where: { id },
+      select: { acheteur: PUBLIC_ACHETEUR_SELECT },
+    });
     if (!order) throw new NotFoundException('Commande introuvable');
     return order;
   }
@@ -90,7 +105,20 @@ export class OrderService {
     const order = await this.findOne(id);
     if (order.vendeurId !== vendeurId) throw new ForbiddenException();
     order.statut = dto.statut as OrderStatus;
-    return this.orderRepo.save(order);
+    const saved = await this.orderRepo.save(order);
+
+    try {
+      if (saved.statut === OrderStatus.ACCEPTEE) {
+        await this.invoiceService.generateForOrder(saved.id, vendeurId);
+      } else if (saved.statut === OrderStatus.LIVREE) {
+        await this.invoiceService.generateForOrder(saved.id, vendeurId);
+        await this.deliveryNoteService.generateForOrder(saved.id, vendeurId);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la generation des documents de commande:', error);
+    }
+
+    return saved;
   }
 
   async countPending(vendeurId: string) {

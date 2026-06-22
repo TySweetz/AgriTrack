@@ -1,15 +1,24 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 /**
- * Parametres entreprise (singleton)
+ * Parametres entreprise par vendeur (signature, TVA, SIRET)
  */
 @Entity('company_settings')
 export class CompanySettingsEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column('varchar', { length: 150, nullable: true })
-  company_name?: string;
+  @Column('uuid', { unique: true })
+  vendeurId!: string;
+
+  @Column('varchar', { length: 30, nullable: true })
+  siret?: string;
+
+  @Column('boolean', { default: false })
+  assujetti_tva!: boolean;
+
+  @Column('decimal', { precision: 5, scale: 2, default: 20 })
+  taux_tva!: number;
 
   @Column('varchar', { length: 255, nullable: true })
   signature_file_path!: string | null;

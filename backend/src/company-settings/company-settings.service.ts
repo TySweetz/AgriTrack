@@ -7,7 +7,7 @@ import { UpdateCompanySettingsDto } from './company-settings.dto';
 import { CompanySettingsEntity } from './company-settings.entity';
 
 /**
- * Service pour les parametres entreprise
+ * Service pour les parametres entreprise (un jeu de parametres par vendeur)
  */
 @Injectable()
 export class CompanySettingsService {
@@ -41,7 +41,9 @@ export class CompanySettingsService {
 
     return {
       id: settings.id,
-      company_name: settings.company_name || null,
+      siret: settings.siret || null,
+      assujetti_tva: settings.assujetti_tva,
+      taux_tva: Number(settings.taux_tva),
       signature_enabled_delivery: settings.signature_enabled_delivery,
       signature_enabled_invoice: settings.signature_enabled_invoice,
       signature_url: signatureUrl,
@@ -51,17 +53,15 @@ export class CompanySettingsService {
     };
   }
 
-  async getOrCreate() {
-    const [existing] = await this.settingsRepository.find({
-      order: { created_at: 'ASC' },
-      take: 1,
-    });
+  async getOrCreate(vendeurId: string) {
+    const existing = await this.settingsRepository.findOne({ where: { vendeurId } });
 
     if (existing) {
       return existing;
     }
 
     const created = this.settingsRepository.create({
+      vendeurId,
       signature_enabled_delivery: true,
       signature_enabled_invoice: true,
     });
@@ -69,31 +69,25 @@ export class CompanySettingsService {
     return this.settingsRepository.save(created);
   }
 
-  async getSettings() {
-    const settings = await this.getOrCreate();
+  async getSettings(vendeurId: string) {
+    const settings = await this.getOrCreate(vendeurId);
     return this.toResponse(settings);
   }
 
-  async updateSettings(dto: UpdateCompanySettingsDto) {
-    const settings = await this.getOrCreate();
+  async updateSettings(vendeurId: string, dto: UpdateCompanySettingsDto) {
+    const settings = await this.getOrCreate(vendeurId);
 
-    if (dto.company_name !== undefined) {
-      settings.company_name = dto.company_name;
-    }
-
-    if (dto.signature_enabled_delivery !== undefined) {
-      settings.signature_enabled_delivery = dto.signature_enabled_delivery;
-    }
-
-    if (dto.signature_enabled_invoice !== undefined) {
-      settings.signature_enabled_invoice = dto.signature_enabled_invoice;
-    }
+    if (dto.siret !== undefined) settings.siret = dto.siret;
+    if (dto.assujetti_tva !== undefined) settings.assujetti_tva = dto.assujetti_tva;
+    if (dto.taux_tva !== undefined) settings.taux_tva = dto.taux_tva;
+    if (dto.signature_enabled_delivery !== undefined) settings.signature_enabled_delivery = dto.signature_enabled_delivery;
+    if (dto.signature_enabled_invoice !== undefined) settings.signature_enabled_invoice = dto.signature_enabled_invoice;
 
     const saved = await this.settingsRepository.save(settings);
     return this.toResponse(saved);
   }
 
-  async uploadSignature(file: any) {
+  async uploadSignature(vendeurId: string, file: any) {
     if (!file) {
       throw new BadRequestException('Fichier requis');
     }
@@ -108,7 +102,7 @@ export class CompanySettingsService {
       throw new BadRequestException('Fichier trop volumineux (2MB max)');
     }
 
-    const settings = await this.getOrCreate();
+    const settings = await this.getOrCreate(vendeurId);
     this.ensureUploadsDirectory();
 
     if (settings.signature_file_path) {
@@ -128,8 +122,8 @@ export class CompanySettingsService {
     return this.toResponse(saved);
   }
 
-  async removeSignature() {
-    const settings = await this.getOrCreate();
+  async removeSignature(vendeurId: string) {
+    const settings = await this.getOrCreate(vendeurId);
 
     if (settings.signature_file_path) {
       const oldFileAbsolute = join(process.cwd(), settings.signature_file_path.replace(/^\//, ''));

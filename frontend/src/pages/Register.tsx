@@ -102,12 +102,18 @@ export const Register = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Téléphone <span className="text-gray-400">(optionnel)</span>
+              Téléphone{' '}
+              {form.role === 'agriculteur' ? (
+                <span className="text-red-500">*</span>
+              ) : (
+                <span className="text-gray-400">(optionnel)</span>
+              )}
             </label>
             <input
               type="tel"
               value={form.telephone}
               onChange={set('telephone')}
+              required={form.role === 'agriculteur'}
               className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"
               placeholder="06 12 34 56 78"
             />

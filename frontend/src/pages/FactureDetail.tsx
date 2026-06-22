@@ -5,9 +5,6 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { invoicesApi, InvoiceDocument } from '../api/invoices';
 
-/**
- * Page de consultation et impression d'une facture
- */
 export const FactureDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -16,31 +13,19 @@ export const FactureDetail = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadDocument = async () => {
-      if (!id) {
-        setError('Facture introuvable');
-        setLoading(false);
-        return;
-      }
+    if (!id) {
+      setError('Facture introuvable');
+      setLoading(false);
+      return;
+    }
 
-      try {
-        setLoading(true);
-        const data = await invoicesApi.getDocument(id);
-        setDocument(data);
-        setError(null);
-      } catch (err) {
-        setError('Impossible de charger la facture');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDocument();
+    invoicesApi.getDocument(id)
+      .then(setDocument)
+      .catch(() => setError('Impossible de charger la facture'))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   if (loading) {
     return <div className="p-4 max-w-4xl mx-auto">Chargement...</div>;
@@ -78,59 +63,69 @@ export const FactureDetail = () => {
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Facture</h1>
-            <p className="text-gray-500">Référence: {document.printableReference}</p>
-            <p className="text-gray-500">Période: {document.printablePeriod}</p>
+            <p className="text-gray-500">Référence : {document.printableReference}</p>
+            <p className="text-gray-500">Date : {document.printableDate}</p>
           </div>
           <div className="text-right text-sm text-gray-600">
-            <p className="font-semibold text-gray-800">AgriTrack</p>
-            <p>Document de facturation</p>
+            <p className="font-semibold text-gray-800">{invoice.vendeurNom}</p>
+            {invoice.vendeurSiret && <p>SIRET : {invoice.vendeurSiret}</p>}
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
-          <div className="border rounded-lg p-4">
-            <p className="text-sm text-gray-500 mb-1">Client</p>
-            <p className="font-semibold text-gray-800">{invoice.client?.nom ?? 'Client inconnu'}</p>
-            <p className="text-sm text-gray-600">{invoice.client?.adresse ?? ''}</p>
-          </div>
-          <div className="border rounded-lg p-4">
-            <p className="text-sm text-gray-500 mb-1">Statut</p>
-            <p className="font-semibold text-gray-800">{invoice.status}</p>
-            <p className="text-sm text-gray-600">Total TTC: {Number(invoice.montant_ttc).toFixed(2)} €</p>
-          </div>
+        <div className="border rounded-lg p-4 mb-6">
+          <p className="text-sm text-gray-500 mb-1">Client</p>
+          <p className="font-semibold text-gray-800">{invoice.acheteurNom}</p>
+          {invoice.acheteurAdresse && <p className="text-sm text-gray-600">{invoice.acheteurAdresse}</p>}
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-hidden mb-6">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left px-4 py-3">Kg</th>
-                <th className="text-left px-4 py-3">PU / kg</th>
-                <th className="text-left px-4 py-3">HT</th>
-                <th className="text-left px-4 py-3">TVA</th>
-                <th className="text-left px-4 py-3">TTC</th>
+                <th className="text-left px-4 py-3">Produit</th>
+                <th className="text-right px-4 py-3">Qté</th>
+                <th className="text-right px-4 py-3">PU</th>
+                <th className="text-right px-4 py-3">Total</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t">
-                <td className="px-4 py-3">{Number(invoice.total_kg).toFixed(1)}</td>
-                <td className="px-4 py-3">{Number(invoice.prix_unitaire_kg).toFixed(2)} €</td>
-                <td className="px-4 py-3">{Number(invoice.montant_ht).toFixed(2)} €</td>
-                <td className="px-4 py-3">{Number(invoice.montant_tva).toFixed(2)} €</td>
-                <td className="px-4 py-3 font-semibold">{Number(invoice.montant_ttc).toFixed(2)} €</td>
-              </tr>
+              {invoice.items.map((item, i) => (
+                <tr key={i} className="border-t">
+                  <td className="px-4 py-3">{item.nomProduit}</td>
+                  <td className="px-4 py-3 text-right">{item.quantite} {item.unite}</td>
+                  <td className="px-4 py-3 text-right">{Number(item.prixUnitaire).toFixed(2)} €</td>
+                  <td className="px-4 py-3 text-right font-medium">{Number(item.sousTotal).toFixed(2)} €</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
+        <div className="flex justify-end">
+          <div className="w-full max-w-xs space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Total HT</span>
+              <span className="font-medium">{Number(invoice.montant_ht).toFixed(2)} €</span>
+            </div>
+            {invoice.assujetti_tva ? (
+              <div className="flex justify-between">
+                <span className="text-gray-500">TVA ({Number(invoice.taux_tva).toFixed(0)}%)</span>
+                <span className="font-medium">{Number(invoice.montant_tva).toFixed(2)} €</span>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic pt-1">TVA non applicable, article 293 B du CGI</p>
+            )}
+            <div className="flex justify-between pt-2 border-t text-base font-bold text-sage-700">
+              <span>Total TTC</span>
+              <span>{Number(invoice.montant_ttc).toFixed(2)} €</span>
+            </div>
+          </div>
+        </div>
+
         {document.signature?.enabled && document.signature.url && (
           <div className="mt-8 border-t pt-6">
-            <p className="text-sm text-gray-500 mb-2">Signature entreprise</p>
-            <img
-              src={document.signature.url}
-              alt="Signature entreprise"
-              className="h-20 object-contain"
-            />
+            <p className="text-sm text-gray-500 mb-2">Signature</p>
+            <img src={document.signature.url} alt="Signature" className="h-20 object-contain" />
           </div>
         )}
       </Card>

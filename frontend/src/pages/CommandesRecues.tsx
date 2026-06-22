@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Truck } from 'lucide-react';
 import { ordersApi, Order } from '../api/orders';
+import { invoicesApi, Invoice } from '../api/invoices';
+import { deliveryNotesApi, DeliveryNote } from '../api/deliveryNotes';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,12 +16,23 @@ const statutLabel: Record<string, { label: string; color: string }> = {
 
 export const CommandesRecues = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [invoicesByOrder, setInvoicesByOrder] = useState<Record<string, Invoice>>({});
+  const [notesByOrder, setNotesByOrder] = useState<Record<string, DeliveryNote>>({});
   const [loading, setLoading] = useState(true);
+  const [docLoading, setDocLoading] = useState<string | null>(null);
   const { addToast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const load = () =>
-    ordersApi.getReceived().then((r) => { setOrders(r.data); setLoading(false); });
+    Promise.all([ordersApi.getReceived(), invoicesApi.getAll(), deliveryNotesApi.getAll()]).then(
+      ([ordersRes, invoices, notes]) => {
+        setOrders(ordersRes.data);
+        setInvoicesByOrder(Object.fromEntries(invoices.map((i) => [i.orderId, i])));
+        setNotesByOrder(Object.fromEntries(notes.map((n) => [n.orderId, n])));
+        setLoading(false);
+      },
+    );
 
   useEffect(() => { load(); }, [user?.id]);
 
@@ -26,8 +41,37 @@ export const CommandesRecues = () => {
       const updated = await ordersApi.updateStatus(id, statut);
       setOrders((prev) => prev.map((o) => (o.id === id ? updated.data : o)));
       addToast('Statut mis à jour', 'success');
+      load();
     } catch {
       addToast('Erreur lors de la mise à jour', 'error');
+    }
+  };
+
+  const openInvoice = async (orderId: string) => {
+    const existing = invoicesByOrder[orderId];
+    if (existing) { navigate(`/factures/${existing.id}`); return; }
+    setDocLoading(orderId + '-facture');
+    try {
+      const invoice = await invoicesApi.generate(orderId);
+      navigate(`/factures/${invoice.id}`);
+    } catch {
+      addToast('Impossible de générer la facture', 'error');
+    } finally {
+      setDocLoading(null);
+    }
+  };
+
+  const openDeliveryNote = async (orderId: string) => {
+    const existing = notesByOrder[orderId];
+    if (existing) { navigate(`/livraisons/${existing.id}`); return; }
+    setDocLoading(orderId + '-bon');
+    try {
+      const note = await deliveryNotesApi.generate(orderId);
+      navigate(`/livraisons/${note.id}`);
+    } catch {
+      addToast('Impossible de générer le bon de livraison', 'error');
+    } finally {
+      setDocLoading(null);
     }
   };
 
@@ -53,6 +97,8 @@ export const CommandesRecues = () => {
           {orders.map((order) => {
             const st = statutLabel[order.statut];
             const acheteurNom = order.acheteur?.pseudo || order.acheteur?.nom || 'Acheteur';
+            const canHaveInvoice = order.statut === 'acceptee' || order.statut === 'livree';
+            const canHaveDeliveryNote = order.statut === 'livree';
             return (
               <div key={order.id} className="bg-white rounded-xl border border-gray-200 p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -88,32 +134,52 @@ export const CommandesRecues = () => {
                   <p className="text-xs text-gray-400 italic mb-3">"{order.message}"</p>
                 )}
 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100 flex-wrap gap-2">
                   <span className="font-bold text-sage-700">{Number(order.total).toFixed(2)} €</span>
-                  {order.statut === 'en_attente' && (
-                    <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
+                    {canHaveInvoice && (
                       <button
-                        onClick={() => updateStatus(order.id, 'refusee')}
-                        className="px-3 py-1.5 text-xs font-medium border border-red-200 text-red-600 rounded-lg hover:bg-red-50"
+                        onClick={() => openInvoice(order.id)}
+                        disabled={docLoading === order.id + '-facture'}
+                        className="px-3 py-1.5 text-xs font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 inline-flex items-center gap-1.5 disabled:opacity-50"
                       >
-                        Refuser
+                        <FileText size={14} /> Facture
                       </button>
+                    )}
+                    {canHaveDeliveryNote && (
                       <button
-                        onClick={() => updateStatus(order.id, 'acceptee')}
-                        className="px-3 py-1.5 text-xs font-medium bg-sage-600 text-white rounded-lg hover:bg-sage-700"
+                        onClick={() => openDeliveryNote(order.id)}
+                        disabled={docLoading === order.id + '-bon'}
+                        className="px-3 py-1.5 text-xs font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 inline-flex items-center gap-1.5 disabled:opacity-50"
                       >
-                        Accepter
+                        <Truck size={14} /> Bon de livraison
                       </button>
-                    </div>
-                  )}
-                  {order.statut === 'acceptee' && (
-                    <button
-                      onClick={() => updateStatus(order.id, 'livree')}
-                      className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Marquer livrée
-                    </button>
-                  )}
+                    )}
+                    {order.statut === 'en_attente' && (
+                      <>
+                        <button
+                          onClick={() => updateStatus(order.id, 'refusee')}
+                          className="px-3 py-1.5 text-xs font-medium border border-red-200 text-red-600 rounded-lg hover:bg-red-50"
+                        >
+                          Refuser
+                        </button>
+                        <button
+                          onClick={() => updateStatus(order.id, 'acceptee')}
+                          className="px-3 py-1.5 text-xs font-medium bg-sage-600 text-white rounded-lg hover:bg-sage-700"
+                        >
+                          Accepter
+                        </button>
+                      </>
+                    )}
+                    {order.statut === 'acceptee' && (
+                      <button
+                        onClick={() => updateStatus(order.id, 'livree')}
+                        className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        Marquer livrée
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );

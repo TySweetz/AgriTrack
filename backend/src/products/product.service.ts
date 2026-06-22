@@ -4,6 +4,13 @@ import { Repository } from 'typeorm';
 import { ProductEntity } from './product.entity';
 import { CreateProductDto, UpdateProductDto } from './product.dto';
 
+const PUBLIC_VENDEUR_SELECT = {
+  id: true,
+  nom: true,
+  entreprise: true,
+  telephone: true,
+} as const;
+
 @Injectable()
 export class ProductService {
   constructor(
@@ -12,19 +19,31 @@ export class ProductService {
   ) {}
 
   findAll() {
-    return this.repo.find({ where: { actif: true }, order: { createdAt: 'DESC' } });
+    return this.repo.find({
+      where: { actif: true },
+      order: { createdAt: 'DESC' },
+      select: { vendeur: PUBLIC_VENDEUR_SELECT },
+    });
   }
 
   findByVendeur(vendeurId: string) {
-    return this.repo.find({ where: { vendeurId }, order: { createdAt: 'DESC' } });
+    return this.repo.find({
+      where: { vendeurId },
+      order: { createdAt: 'DESC' },
+      select: { vendeur: PUBLIC_VENDEUR_SELECT },
+    });
   }
 
   findByVendeurPublic(vendeurId: string) {
-    return this.repo.find({ where: { vendeurId, actif: true }, order: { createdAt: 'DESC' } });
+    return this.repo.find({
+      where: { vendeurId, actif: true },
+      order: { createdAt: 'DESC' },
+      select: { vendeur: PUBLIC_VENDEUR_SELECT },
+    });
   }
 
   async findOne(id: string) {
-    const p = await this.repo.findOne({ where: { id } });
+    const p = await this.repo.findOne({ where: { id }, select: { vendeur: PUBLIC_VENDEUR_SELECT } });
     if (!p) throw new NotFoundException('Produit introuvable');
     return p;
   }

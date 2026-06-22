@@ -49,7 +49,7 @@ export const Marketplace = () => {
       const q = search.toLowerCase();
       list = list.filter((p) =>
         p.nom.toLowerCase().includes(q) ||
-        p.vendeur.nom.toLowerCase().includes(q) ||
+        (p.vendeur.entreprise || p.vendeur.nom).toLowerCase().includes(q) ||
         p.categorie.toLowerCase().includes(q),
       );
     }
@@ -252,7 +252,7 @@ export const Marketplace = () => {
                       {product.description && (
                         <p className="text-xs text-gray-500 mb-2 line-clamp-2">{product.description}</p>
                       )}
-                      <Link to={`/vendeur/${product.vendeurId}`} className="text-xs text-gray-400 mb-3 hover:text-sage-600 hover:underline block">🌱 {product.vendeur.nom}</Link>
+                      <Link to={`/vendeur/${product.vendeurId}`} className="text-xs text-gray-400 mb-3 hover:text-sage-600 hover:underline block">🌱 {product.vendeur.entreprise || product.vendeur.nom}</Link>
                       <div className="mt-auto">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-base font-bold text-sage-700">

@@ -22,6 +22,9 @@ export class UserEntity {
   @Column()
   nom!: string;
 
+  @Column({ nullable: true, type: 'varchar' })
+  entreprise?: string;
+
   @Column({ nullable: true })
   telephone?: string;
 

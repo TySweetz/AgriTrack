@@ -1,26 +1,33 @@
 import apiClient from './client';
-import { Client } from './clients';
+
+export interface InvoiceLine {
+  nomProduit: string;
+  prixUnitaire: number;
+  unite: string;
+  quantite: number;
+  sousTotal: number;
+}
 
 export interface Invoice {
   id: string;
   numero_facture: string;
-  status: string;
-  period_start: string;
-  period_end: string;
-  total_kg: number;
-  prix_unitaire_kg: number;
-  montant_ht: number;
+  orderId: string;
+  vendeurNom: string;
+  vendeurSiret?: string;
+  acheteurNom: string;
+  acheteurAdresse?: string;
+  items: InvoiceLine[];
+  assujetti_tva: boolean;
   taux_tva: number;
+  montant_ht: number;
   montant_tva: number;
   montant_ttc: number;
-  client_id: string;
-  client: Client;
+  created_at: string;
 }
 
 export interface InvoiceDocument {
-  documentTitle: string;
   printableReference: string;
-  printablePeriod: string;
+  printableDate: string;
   signature?: {
     enabled: boolean;
     url: string | null;
@@ -30,12 +37,10 @@ export interface InvoiceDocument {
 
 const normalizeInvoice = (invoice: any): Invoice => ({
   ...invoice,
-  total_kg: typeof invoice.total_kg === 'string' ? parseFloat(invoice.total_kg) : invoice.total_kg,
-  prix_unitaire_kg: typeof invoice.prix_unitaire_kg === 'string' ? parseFloat(invoice.prix_unitaire_kg) : invoice.prix_unitaire_kg,
-  montant_ht: typeof invoice.montant_ht === 'string' ? parseFloat(invoice.montant_ht) : invoice.montant_ht,
-  taux_tva: typeof invoice.taux_tva === 'string' ? parseFloat(invoice.taux_tva) : invoice.taux_tva,
-  montant_tva: typeof invoice.montant_tva === 'string' ? parseFloat(invoice.montant_tva) : invoice.montant_tva,
-  montant_ttc: typeof invoice.montant_ttc === 'string' ? parseFloat(invoice.montant_ttc) : invoice.montant_ttc,
+  taux_tva: Number(invoice.taux_tva),
+  montant_ht: Number(invoice.montant_ht),
+  montant_tva: Number(invoice.montant_tva),
+  montant_ttc: Number(invoice.montant_ttc),
 });
 
 export const invoicesApi = {
@@ -44,24 +49,13 @@ export const invoicesApi = {
     return response.data.map(normalizeInvoice);
   },
 
-  getOne: async (id: string): Promise<Invoice> => {
-    const response = await apiClient.get(`/invoices/${id}`);
-    return normalizeInvoice(response.data);
-  },
-
   getDocument: async (id: string): Promise<InvoiceDocument> => {
     const response = await apiClient.get(`/invoices/${id}/document`);
-    return response.data;
+    return { ...response.data, invoice: normalizeInvoice(response.data.invoice) };
   },
 
-  generateMonthly: async (data: {
-    client_id: string;
-    period_start: string;
-    period_end: string;
-    prix_unitaire_kg: number;
-    taux_tva: number;
-  }): Promise<Invoice> => {
-    const response = await apiClient.post('/invoices/generate-monthly', data);
+  generate: async (orderId: string): Promise<Invoice> => {
+    const response = await apiClient.post(`/invoices/generate/${orderId}`);
     return normalizeInvoice(response.data);
   },
 };

@@ -13,7 +13,7 @@ export const Profil = () => {
 
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
-  const [agriForm, setAgriForm] = useState({ nom: '', telephone: '' });
+  const [agriForm, setAgriForm] = useState({ entreprise: '', telephone: '' });
   const [pseudoForm, setPseudoForm] = useState('');
 
   if (!user) return null;
@@ -27,7 +27,7 @@ export const Profil = () => {
       if (user.telephone) {
         doSwitch('agriculteur');
       } else {
-        setAgriForm({ nom: user.nom, telephone: '' });
+        setAgriForm({ entreprise: '', telephone: '' });
         setModal('agriculteur');
       }
     } else {
@@ -62,7 +62,7 @@ export const Profil = () => {
     setModal(null);
     setLoading(true);
     try {
-      await updateMe({ nom: agriForm.nom, telephone: agriForm.telephone });
+      await updateMe({ entreprise: agriForm.entreprise, telephone: agriForm.telephone });
       await switchRole('agriculteur');
       addToast('Mode Agriculteur activé 🌱', 'success');
       navigate('/');
@@ -94,7 +94,7 @@ export const Profil = () => {
     navigate('/login');
   };
 
-  const displayName = isAgriculteur ? user.nom : (user.pseudo || user.nom);
+  const displayName = isAgriculteur ? (user.entreprise || user.nom) : (user.pseudo || user.nom);
 
   return (
     <div className="p-6 max-w-lg mx-auto">
@@ -173,18 +173,18 @@ export const Profil = () => {
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-5">
-              Renseignez le nom de votre exploitation et votre téléphone. Ces informations ne vous
+              Renseignez le nom de votre entreprise et votre téléphone (obligatoires). Ces informations ne vous
               seront plus demandées lors de vos prochains passages en mode Agriculteur.
             </p>
             <form onSubmit={handleAgriSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom de l'exploitation <span className="text-red-500">*</span>
+                  Nom de l'entreprise <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={agriForm.nom}
-                  onChange={(e) => setAgriForm((f) => ({ ...f, nom: e.target.value }))}
+                  value={agriForm.entreprise}
+                  onChange={(e) => setAgriForm((f) => ({ ...f, entreprise: e.target.value }))}
                   required
                   placeholder="Ferme Dupont"
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400"

@@ -4,6 +4,7 @@ export interface AuthUser {
   id: string;
   email: string;
   nom: string;
+  entreprise?: string;
   role: 'agriculteur' | 'acheteur';
   telephone?: string;
   adresse?: string;
@@ -34,7 +35,7 @@ export const authApi = {
   resetPassword: (token: string, newPassword: string) =>
     apiClient.post<{ message: string }>('/auth/reset-password', { token, newPassword }),
 
-  updateMe: (data: { nom?: string; telephone?: string; adresse?: string; pseudo?: string }) =>
+  updateMe: (data: { nom?: string; entreprise?: string; telephone?: string; adresse?: string; pseudo?: string }) =>
     apiClient.patch<AuthResponse>('/auth/me', data),
 
   switchRole: (role: 'agriculteur' | 'acheteur') =>

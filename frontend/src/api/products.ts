@@ -12,7 +12,7 @@ export interface Product {
   photo?: string;
   actif: boolean;
   vendeurId: string;
-  vendeur: { id: string; nom: string; telephone?: string };
+  vendeur: { id: string; nom: string; entreprise?: string; telephone?: string };
   createdAt: string;
 }
 

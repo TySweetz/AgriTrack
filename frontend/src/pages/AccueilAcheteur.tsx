@@ -117,7 +117,7 @@ export const AccueilAcheteur = () => {
                 )}
                 <div className="p-3">
                   <p className="text-sm font-medium text-gray-900 truncate">{product.nom}</p>
-                  <p className="text-xs text-gray-400 truncate">🌱 {product.vendeur.nom}</p>
+                  <p className="text-xs text-gray-400 truncate">🌱 {product.vendeur.entreprise || product.vendeur.nom}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-sm font-bold text-sage-700">
                       {Number(product.prix).toFixed(2)} €<span className="text-xs font-normal text-gray-400">/{product.unite}</span>

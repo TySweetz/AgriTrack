@@ -14,7 +14,7 @@ interface AuthContextType {
     adresse?: string;
   }) => Promise<void>;
   logout: () => void;
-  updateMe: (data: { nom?: string; telephone?: string; adresse?: string; pseudo?: string }) => Promise<void>;
+  updateMe: (data: { nom?: string; entreprise?: string; telephone?: string; adresse?: string; pseudo?: string }) => Promise<void>;
   switchRole: (role: 'agriculteur' | 'acheteur') => Promise<void>;
 }
 
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
-  const updateMe = async (data: { nom?: string; telephone?: string; adresse?: string; pseudo?: string }) => {
+  const updateMe = async (data: { nom?: string; entreprise?: string; telephone?: string; adresse?: string; pseudo?: string }) => {
     const res = await authApi.updateMe(data);
     persistAuth(res.data.access_token, res.data.user);
   };

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import {
-  BarChart3, ClipboardList, FileText, Home, Package,
-  Settings, ShoppingBag, ShoppingCart, Truck, Users,
+  BarChart3, ClipboardList, FileText, Home, LogIn,
+  Settings, ShoppingBag, ShoppingCart, Truck, UserPlus,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -33,10 +33,8 @@ export const Navbar = () => {
     { path: '/', icon: BarChart3, label: 'Dashboard' },
     { path: '/mes-produits', icon: ShoppingBag, label: 'Mes produits' },
     { path: '/commandes-recues', icon: ClipboardList, label: 'Commandes', badge: pendingCount || null },
-    { path: '/inventaire', icon: Package, label: 'Inventaire' },
-    { path: '/livraisons', icon: Truck, label: 'Livraisons' },
     { path: '/factures', icon: FileText, label: 'Factures' },
-    { path: '/clients', icon: Users, label: 'Clients' },
+    { path: '/livraisons', icon: Truck, label: 'Bons de livraison' },
     { path: '/parametres', icon: Settings, label: 'Paramètres' },
   ];
 
@@ -47,9 +45,15 @@ export const Navbar = () => {
     { path: '/mes-commandes', icon: ClipboardList, label: 'Mes commandes' },
   ];
 
-  const navItems = user?.role === 'acheteur' ? acheteurItems : vendeurItems;
+  const guestItems = [
+    { path: '/marketplace', icon: ShoppingBag, label: 'Marketplace' },
+    { path: '/panier', icon: ShoppingCart, label: 'Panier', badge: count || null },
+    { path: '/login', icon: LogIn, label: 'Connexion' },
+  ];
+
+  const navItems = !user ? guestItems : user.role === 'acheteur' ? acheteurItems : vendeurItems;
   const displayName = user
-    ? user.role === 'acheteur' && user.pseudo ? user.pseudo : user.nom
+    ? user.role === 'acheteur' ? (user.pseudo || user.nom) : (user.entreprise || user.nom)
     : '';
 
   return (
@@ -88,8 +92,8 @@ export const Navbar = () => {
           ))}
         </div>
 
-        {/* Profil */}
-        {user && (
+        {/* Profil / Connexion */}
+        {user ? (
           <div className="hidden md:block mt-auto pt-4 border-t border-gray-100">
             <Link
               to="/profil"
@@ -104,6 +108,21 @@ export const Navbar = () => {
                 <p className="text-sm font-medium text-gray-900 truncate">{displayName}</p>
                 <p className="text-xs text-gray-500 capitalize">{user.role}</p>
               </div>
+            </Link>
+          </div>
+        ) : (
+          <div className="hidden md:flex md:flex-col md:gap-2 mt-auto pt-4 border-t border-gray-100">
+            <Link
+              to="/login"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <LogIn size={16} /> Connexion
+            </Link>
+            <Link
+              to="/register"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-sage-600 text-white hover:bg-sage-700 transition-colors"
+            >
+              <UserPlus size={16} /> Inscription
             </Link>
           </div>
         )}

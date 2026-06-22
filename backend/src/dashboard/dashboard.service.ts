@@ -1,43 +1,95 @@
 import { Injectable } from '@nestjs/common';
-import { InventoryService } from '../inventory/inventory.service';
-import { DeliveryService } from '../deliveries/delivery.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { InventoryEntity } from '../inventory/inventory.entity';
+import { OrderEntity, OrderStatus } from '../orders/order.entity';
+import { ProductEntity } from '../products/product.entity';
+
+const CONFIRMED_STATUSES = [OrderStatus.ACCEPTEE, OrderStatus.LIVREE];
 
 /**
- * Service pour la gestion du dashboard avec agrégats
+ * Service pour la gestion du dashboard - agregats calcules a partir des
+ * commandes et produits reels du vendeur connecte
  */
 @Injectable()
 export class DashboardService {
   constructor(
-    private readonly inventoryService: InventoryService,
-    private readonly deliveryService: DeliveryService,
-    @InjectRepository(InventoryEntity)
-    private readonly inventoryRepository: Repository<InventoryEntity>,
+    @InjectRepository(OrderEntity)
+    private readonly orderRepository: Repository<OrderEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly productRepository: Repository<ProductEntity>,
   ) {}
 
-  /**
-   * Récupère les données du dashboard
-   */
-  async getDashboardData() {
-    const totalStockKg = await this.inventoryService.getTotalStock();
-    const totalVendedKg = await this.deliveryService.getTotalDelivered();
-    const recentDeliveries = await this.deliveryService.getRecent(5);
+  async getDashboardData(vendeurId: string) {
+    const [orders, products] = await Promise.all([
+      this.orderRepository.find({
+        where: { vendeurId },
+        order: { createdAt: 'DESC' },
+        select: { acheteur: { id: true, nom: true, pseudo: true } },
+      }),
+      this.productRepository.find({ where: { vendeurId } }),
+    ]);
 
-    // Calcul de la moyenne kg/botte
-    const result = await this.inventoryRepository
-      .createQueryBuilder('inventory')
-      .select('AVG(COALESCE(inventory.poids_moyen_botte, inventory.poids_moyen_panier))', 'avg')
-      .getRawOne();
-    const moyenneBotte = result?.avg ? parseFloat(result.avg) : 0;
+    const confirmed = orders.filter((o) => CONFIRMED_STATUSES.includes(o.statut));
+    const totalRevenue = confirmed.reduce((sum, o) => sum + Number(o.total), 0);
+    const pendingCount = orders.filter((o) => o.statut === OrderStatus.EN_ATTENTE).length;
+
+    const productAgg = new Map<string, { nom: string; unite: string; quantite: number; revenue: number }>();
+    for (const order of confirmed) {
+      for (const item of order.items) {
+        const current = productAgg.get(item.productId) || {
+          nom: item.nomProduit,
+          unite: item.unite,
+          quantite: 0,
+          revenue: 0,
+        };
+        current.quantite += Number(item.quantite);
+        current.revenue += Number(item.sousTotal);
+        productAgg.set(item.productId, current);
+      }
+    }
+    const topProducts = [...productAgg.values()]
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    const lowStockProducts = products
+      .filter((p) => p.actif && Number(p.stock) <= 5)
+      .sort((a, b) => Number(a.stock) - Number(b.stock))
+      .slice(0, 5)
+      .map((p) => ({ id: p.id, nom: p.nom, stock: Number(p.stock), unite: p.unite }));
+
+    const recentOrders = orders.slice(0, 5).map((o) => ({
+      id: o.id,
+      acheteurNom: o.acheteur?.pseudo || o.acheteur?.nom || 'Acheteur',
+      total: Number(o.total),
+      statut: o.statut,
+      createdAt: o.createdAt,
+      itemsCount: o.items.length,
+    }));
+
+    const days = 14;
+    const salesByDay: { date: string; total: number }[] = [];
+    const byDate = new Map<string, number>();
+    for (const order of confirmed) {
+      const key = new Date(order.createdAt).toISOString().slice(0, 10);
+      byDate.set(key, (byDate.get(key) || 0) + Number(order.total));
+    }
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      salesByDay.push({ date: key, total: byDate.get(key) || 0 });
+    }
 
     return {
-      total_stock_kg: totalStockKg,
-      total_vendu_kg: totalVendedKg,
-      moyenne_kg_botte: moyenneBotte,
-      livraisons_recentes: recentDeliveries,
-      nombre_livraisons: recentDeliveries.length,
+      totalRevenue,
+      ordersConfirmedCount: confirmed.length,
+      pendingOrdersCount: pendingCount,
+      activeProductsCount: products.filter((p) => p.actif).length,
+      totalProductsCount: products.length,
+      topProducts,
+      lowStockProducts,
+      recentOrders,
+      salesByDay,
     };
   }
 }
